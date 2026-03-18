@@ -24,23 +24,40 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadLatest = async () => {
+    const loadResume = async () => {
       try {
-        const res = await api.get("/api/resume/all");
-        if (res.data.data && res.data.data.length > 0) {
-          const latest = res.data.data[0];
-          const insightsRes = await api.get(`/api/resume/insights/${latest._id}`);
+        const lastId = localStorage.getItem("lastResumeId");
+        let resumeToLoad = null;
+
+        if (lastId && lastId !== "undefined") {
+          try {
+            const res = await api.get(`/api/resume/${lastId}`);
+            resumeToLoad = res.data.data;
+          } catch (err) {
+            console.error("Failed to load specific resume, falling back to latest", err);
+          }
+        }
+
+        if (!resumeToLoad) {
+          const res = await api.get("/api/resume/all");
+          if (res.data.data && res.data.data.length > 0) {
+            resumeToLoad = res.data.data[0];
+          }
+        }
+
+        if (resumeToLoad) {
+          const insightsRes = await api.get(`/api/resume/insights/${resumeToLoad._id}`);
           setResumeData({
-            ...latest,
+            ...resumeToLoad,
             summary: insightsRes.data?.summary || "",
           });
-          localStorage.setItem("lastResumeId", latest._id);
+          localStorage.setItem("lastResumeId", resumeToLoad._id);
         }
       } catch (err) {
         console.error("Failed to load history", err);
       }
     };
-    loadLatest();
+    loadResume();
   }, []);
 
   const handleFileUpload = async (event) => {
@@ -72,18 +89,17 @@ const Dashboard = () => {
       const progressInterval = setInterval(() => {
         setAiProgress(prev => {
           if (prev >= 95) return 95;
-          return prev + Math.floor(Math.random() * 8) + 2; // Jump by 2-10%
+          const next = prev + Math.floor(Math.random() * 8) + 2; // Jump by 2-10%
+          return next > 95 ? 95 : next; // Hard cap at 95% while polling
         });
       }, 1500);
 
-      // Polling Logic: Now waits up to 60 seconds (20 attempts)
-      let attempts = 0;
+      // Polling Logic: Keep polling until processing is false
       const pollInsights = setInterval(async () => {
         try {
           const insightsRes = await api.get(`/api/resume/insights/${savedResume._id}`);
-          attempts++;
           
-          if (!insightsRes.data?.processing || attempts > 20) {
+          if (!insightsRes.data?.processing) {
             clearInterval(pollInsights);
             clearInterval(progressInterval);
             
@@ -99,9 +115,7 @@ const Dashboard = () => {
             }, 800); // Wait a split second so the user sees 100%
           }
         } catch (err) {
-          clearInterval(pollInsights);
-          clearInterval(progressInterval);
-          setAiProcessing(false);
+          console.error("Polling failed", err);
         }
       }, 3000); 
 
@@ -159,7 +173,7 @@ const Dashboard = () => {
         <Card title="Market Match" value={matchResult ? `${matchResult.matchScore}%` : "0%"} icon={Target} />
         <Card 
           title="AI Reasoning" 
-          value={aiProcessing ? "Processing..." : resumeData?.summary ? "Active" : "Idle"} 
+          value={aiProcessing ? "Analyzing..." : resumeData?.summary ? "Complete" : "Idle"} 
           icon={Zap} 
         />
       </div>
@@ -216,10 +230,10 @@ const Dashboard = () => {
                     <p className="text-[10px] text-emerald-600/60 font-black uppercase mt-2 tracking-widest">Match Score</p>
                   </div>
                   <div className="flex-1 flex flex-wrap gap-2">
-                    {matchResult.matchingSkills?.slice(0, 8).map((s) => (
+                    {matchResult.matchingSkills?.slice(0, 6).map((s) => (
                       <span key={s} className="px-3 py-1 bg-white text-emerald-600 text-[10px] font-black rounded-lg border border-emerald-100 shadow-sm">✓ {s}</span>
                     ))}
-                    {matchResult.missingSkills?.slice(0, 5).map((s) => (
+                    {matchResult.missingSkills?.slice(0, 6).map((s) => (
                       <span key={s} className="px-3 py-1 bg-white text-rose-500 text-[10px] font-black rounded-lg border border-rose-100 shadow-sm">× {s}</span>
                     ))}
                   </div>

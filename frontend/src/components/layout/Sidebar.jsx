@@ -6,7 +6,8 @@ import {
   Sparkles, 
   History, 
   Settings, 
-  LogOut 
+  LogOut,
+  BookOpen
 } from "lucide-react";
 import { getCurrentUser, logout } from "../../services/authService";
 
@@ -64,6 +65,10 @@ const Sidebar = () => {
               <Sparkles size={18} /> 
               <span className="text-sm">AI Insights</span>
             </NavLink>
+<NavLink to="/app/aptitude" className={linkClass}>
+  <BookOpen size={18} /> 
+  <span className="text-sm">Aptitude Prep</span>
+</NavLink>
           </div>
         </div>
 

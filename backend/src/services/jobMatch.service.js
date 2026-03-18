@@ -35,36 +35,26 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
     if (!resumeSkills.includes("database management")) resumeSkills.push("database management");
   }
 
+  // Responsive UI Indicator
+  if (resumeSkills.some(s => ["react", "tailwind", "bootstrap", "css", "frontend"].includes(s))) {
+    if (!resumeSkills.includes("responsive ui")) resumeSkills.push("responsive ui");
+  }
+
   const roleTemplates = {
     "Full Stack Developer": [
-      "react", "node.js", "express", "mongodb", "javascript", "rest api"
+      "react", "node.js", "express", "mongodb", "javascript", "rest api", "responsive ui", "html", "css"
     ],
-    "MERN Stack Specialist": [
-      "mongodb", "express", "react", "node.js", "mern stack", "redux", "tailwind"
-    ],
-    "Frontend Engineer": [
-      "html", "css", "javascript", "react", "bootstrap", "responsive ui", "frontend"
+    "Frontend Developer": [
+      "react", "javascript", "html", "css", "tailwind css", "responsive ui", "typescript"
     ],
     "Backend Developer": [
-      "node.js", "express", "mongodb", "sql", "api", "postman", "backend"
+      "node.js", "express", "mongodb", "sql", "rest api", "python", "docker"
     ],
-    "JavaScript Developer": [
-      "javascript", "es6", "react", "node.js", "git", "npm"
-    ],
-    "Software Engineer": [
-      "java", "python", "c++", "dsa", "git", "oops"
-    ],
-    "Database Administrator": [
-      "sql", "mysql", "mongodb", "database design", "database management"
+    "Data Analyst": [
+      "python", "sql", "excel", "tableau", "pandas", "data visualization"
     ],
     "Software Tester": [
-      "testing", "automation", "selenium", "postman", "test scripts"
-    ],
-    "Python Developer": [
-      "python", "django", "flask", "pandas", "numpy"
-    ],
-    "AI / ML Engineer": [
-      "python", "machine learning", "tensorflow", "pytorch", "data analysis"
+      "selenium", "testing", "manual testing", "automation", "jest"
     ]
   };
 
@@ -108,8 +98,8 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
     // Match score calculation
     const matchScore = Math.round((matchingSkills.length / roleSkills.length) * 100);
 
-    // If the user specifically searched for this role, show it even if the score is 0%
-    if (matchScore >= 25 || userTargetRole) {
+    // FIX: Remove 0% matches and ensure minimum match quality
+    if (matchScore > 0) {
       results.push({
         role,
         matchScore,

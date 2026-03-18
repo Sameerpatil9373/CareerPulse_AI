@@ -55,6 +55,9 @@ const AIInsights = () => {
         loading: false,
         isExporting: false
       });
+      
+      // PERSIST: Ensure Dashboard knows we are looking at this specific resume
+      localStorage.setItem("lastResumeId", targetId);
     } catch (error) {
       console.error("Deep Analysis Error:", error);
       setData(prev => ({ ...prev, loading: false }));
@@ -102,7 +105,10 @@ const AIInsights = () => {
     if (data.loading) {
       setAiProgress(5);
       interval = setInterval(() => {
-        setAiProgress(prev => (prev >= 95 ? 95 : prev + Math.floor(Math.random() * 8) + 2));
+        setAiProgress(prev => {
+          const next = prev + Math.floor(Math.random() * 8) + 2;
+          return next >= 95 ? 95 : next;
+        });
       }, 1500);
     } else {
       setAiProgress(100);

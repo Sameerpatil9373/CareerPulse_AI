@@ -110,7 +110,7 @@ const JobMatching = () => {
               <div className="mb-4">
                 <p className="text-[10px] font-bold uppercase text-gray-400 mb-2">Top Strengths</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {job.matchingSkills?.slice(0, 4).map((skill) => (
+                  {job.matchingSkills?.slice(0, 6).map((skill) => (
                     <span key={skill} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-green-50 text-green-700 border border-green-100">
                       <CheckCircle2 size={10} />
                       {skill}
@@ -124,7 +124,7 @@ const JobMatching = () => {
                 <div className="mb-4">
                   <p className="text-[10px] font-bold uppercase text-gray-400 mb-2">Skills to Gain</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {job.missingSkills.slice(0, 3).map((skill) => (
+                    {job.missingSkills.slice(0, 6).map((skill) => (
                       <span key={skill} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-100">
                         <XCircle size={10} />
                         {skill}

@@ -1,27 +1,44 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api"; // Centralized API use ho raha hai
-import { History as HistoryIcon, ExternalLink, Search, Calendar } from "lucide-react";
+import { History as HistoryIcon, ExternalLink, Calendar, Trash2, AlertCircle, Loader2 } from "lucide-react";
 
 const History = () => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteId, setDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
+  const fetchHistory = async () => {
+    try {
+      const response = await api.get("/api/resume/all"); 
+      setResumes(response.data.data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await api.get("/api/resume/all"); 
-        setResumes(response.data.data);
-      } catch (error) {
-        console.error("Error fetching history:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchHistory();
   }, []);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/api/resume/${deleteId}`);
+      setResumes(prev => prev.filter(r => r._id !== deleteId));
+      setDeleteId(null);
+    } catch (error) {
+      console.error("Delete failed:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const filteredResumes = resumes.filter(res => 
     res.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,16 +51,6 @@ const History = () => {
         <div>
           <h2 className="text-3xl font-black text-[#111322]">Analysis History</h2>
           <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">Manage previous scans</p>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input 
-            type="text"
-            placeholder="Search by filename or role..."
-            className="pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 w-80 text-sm transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
         </div>
       </div>
 
@@ -89,9 +96,15 @@ const History = () => {
                       <span className="text-sm font-black text-indigo-600">{resume.atsScore}%</span>
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-right">
+                  <td className="px-8 py-6 text-right space-x-2">
                     <button onClick={() => navigate("/app/insights", { state: { resumeId: resume._id } })} className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all">
                       View Analysis <ExternalLink size={14} />
+                    </button>
+                    <button 
+                      onClick={() => setDeleteId(resume._id)}
+                      className="bg-rose-50 text-rose-600 p-2 rounded-xl hover:bg-rose-600 hover:text-white transition-all"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
@@ -102,6 +115,43 @@ const History = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-4 text-rose-600 mb-6">
+              <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center">
+                <AlertCircle size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-[#111322]">Delete Analysis?</h3>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-1">This action cannot be undone</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-600 text-sm font-medium leading-relaxed mb-8">
+              Are you sure you want to delete this resume analysis? All insights, scores, and interview questions will be permanently removed.
+            </p>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setDeleteId(null)}
+                className="flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest bg-gray-100 text-gray-400 hover:bg-gray-200 transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              >
+                {isDeleting ? <Loader2 size={14} className="animate-spin" /> : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

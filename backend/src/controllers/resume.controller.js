@@ -2,7 +2,7 @@ const path = require("path");
 const Resume = require("../models/resume.model");
 
 const parseResume = require("../services/resumeParser.service");
-const { generateFullAnalysis } = require("../services/ai.service");
+const { generateFullAnalysis, getFallbackAnalysis } = require("../services/ai.service");
 
 const {
   analyzeSkillsAI,
@@ -30,21 +30,42 @@ exports.uploadResume = async (req, res) => {
     console.log("📄 Resume parsed");
 
     /**
-     * Resume Validation
+     * Flexible Resume Validation
      */
-    const resumeKeywords = [
-      "education", "experience", "skills", "projects",
-      "certifications", "internship", "contact", "linkedin"
-    ];
-
     const textLower = extractedText.toLowerCase();
-    const matchedKeywords = resumeKeywords.filter(keyword =>
-      textLower.includes(keyword)
+    
+    // Grouping keywords to allow for synonyms
+    const sectionGroups = {
+      education: ["education", "university", "college", "degree", "academic", "school"],
+      experience: ["experience", "work", "employment", "history", "career", "professional", "internship"],
+      projects: ["projects", "portfolio", "github", "deployed", "personal work"],
+      skills: ["skills", "technologies", "expertise", "competencies", "tools", "stack"]
+    };
+
+    // Check which section groups have at least one match
+    const foundSections = Object.keys(sectionGroups).filter(group => 
+      sectionGroups[group].some(keyword => textLower.includes(keyword))
     );
 
-    if (matchedKeywords.length < 2) {
+    const missingSections = Object.keys(sectionGroups).filter(group => !foundSections.includes(group));
+
+    // Check for other common resume indicators
+    const otherKeywords = ["summary", "objective", "contact", "linkedin", "achievements", "certifications", "email", "phone"];
+    const matchedOther = otherKeywords.filter(k => textLower.includes(k));
+
+    /**
+     * REJECTION LOGIC (Relaxed): 
+     * - Must have at least 3 out of 4 major sections (or 2 if the resume is otherwise rich)
+     * - OR must have a decent number of other keywords
+     * - Minimum length lowered to 300
+     */
+    const isRichInKeywords = matchedOther.length >= 4;
+    const hasEnoughSections = foundSections.length >= 3 || (foundSections.length >= 2 && isRichInKeywords);
+
+    if (!hasEnoughSections || extractedText.trim().length < 300) {
+      console.log("❌ Rejected File: Found sections:", foundSections, "Other matches:", matchedOther.length);
       return res.status(400).json({
-        message: "Uploaded file does not appear to be a resume."
+        message: `Invalid file: This document does not appear to be a complete resume. A professional resume should clearly include sections like Education, Experience, and Skills. Please ensure your headings are clear.`
       });
     }
 
@@ -91,7 +112,6 @@ exports.uploadResume = async (req, res) => {
           savedResume._id,
           { aiInsights: insights }
         );
-
         console.log("✅ Background AI insights saved");
       } catch (error) {
         console.log("❌ Background AI generation failed:", error.message);
@@ -108,6 +128,24 @@ exports.uploadResume = async (req, res) => {
 };
 
 /**
+ * Get Single Resume by ID
+ */
+exports.getResumeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const resume = await Resume.findOne({ _id: id, userId });
+
+    if (!resume)
+      return res.status(404).json({ message: "Resume not found" });
+
+    res.status(200).json({ data: resume });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
  * Get All Resumes
  */
 exports.getAllResumes = async (req, res) => {
@@ -115,6 +153,26 @@ exports.getAllResumes = async (req, res) => {
     const userId = getUserId(req);
     const resumes = await Resume.find({ userId }).sort({ createdAt: -1 });
     res.status(200).json({ data: resumes });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Delete Resume
+ */
+exports.deleteResume = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+
+    const resume = await Resume.findOneAndDelete({ _id: id, userId });
+
+    if (!resume) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
+
+    res.status(200).json({ message: "Resume deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -162,9 +220,9 @@ exports.getResumeInsights = async (req, res) => {
     }
 
     /**
-     * Force refresh (User clicked Re-Analyze)
+     * Force refresh or generate if missing
      */
-    console.log("🚀 Regenerating AI insights");
+    console.log("🚀 Generating AI insights");
     const insights = await generateFullAnalysis(
       resume.extractedText,
       resume.predictedRole,
@@ -173,7 +231,6 @@ exports.getResumeInsights = async (req, res) => {
 
     resume.aiInsights = insights;
     await resume.save();
-
     res.status(200).json(insights);
 
   } catch (error) {
