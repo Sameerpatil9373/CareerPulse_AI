@@ -75,6 +75,8 @@ const AIInsights = () => {
             currentId = latest._id;
             setResumeId(currentId);
             localStorage.setItem("lastResumeId", currentId);
+            // We return here because setting resumeId will trigger this effect again
+            return;
           } else {
             navigate("/app/dashboard");
             return;
@@ -84,26 +86,33 @@ const AIInsights = () => {
           return;
         }
       }
+      
+      // ONLY fetch if we have a valid ID
       fetchDeepAnalysis(currentId);
     };
+    
     initialize();
-  }, [resumeId, navigate, fetchDeepAnalysis]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId, navigate]);
 
   // Polling mechanism: Keep checking every 3 seconds if data is still loading
   useEffect(() => {
+    if (!data.loading || !resumeId) return;
+
     const interval = setInterval(() => {
-      if (data.loading && resumeId) {
-        fetchDeepAnalysis(resumeId);
-      }
+      fetchDeepAnalysis(resumeId);
     }, 3000);
+    
     return () => clearInterval(interval);
-  }, [data.loading, resumeId, fetchDeepAnalysis]);
+  }, [data.loading, resumeId]); // fetchDeepAnalysis removed from deps as it's stable
 
   // Gamified loading progress simulator (Ticks up while waiting for Ollama)
   useEffect(() => {
     let interval;
     if (data.loading) {
-      setAiProgress(5);
+      // Don't reset to 5 if it's already higher than 0 (unless it's just starting)
+      setAiProgress(prev => (prev === 0 ? 5 : prev));
+      
       interval = setInterval(() => {
         setAiProgress(prev => {
           const next = prev + Math.floor(Math.random() * 8) + 2;
