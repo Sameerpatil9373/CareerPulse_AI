@@ -4,7 +4,7 @@ import Card from "../components/ui/Card";
 import ProgressCircle from "../components/ui/ProgressCircle";
 import {
   FileText, Target, BarChart3, Zap, UploadCloud,
-  Loader2, ArrowRight, AlertCircle, BrainCircuit
+  Loader2, ArrowRight, AlertCircle, BrainCircuit, ExternalLink
 } from "lucide-react";
 import api from "../services/api";
 
@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [matchResult, setMatchResult] = useState(null);
   const [isMatching, setIsMatching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   
   // NEW: Gamified Loading States
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -83,6 +84,7 @@ const Dashboard = () => {
       // Show ATS score instantly
       setResumeData(savedResume);
       setMatchResult(null);
+      setHasSearched(false);
       setJobDescription("");
       setIsUploading(false); // Stop main upload spinner
 
@@ -134,6 +136,7 @@ const Dashboard = () => {
     
     setError("");
     setIsMatching(true);
+    setHasSearched(true);
     
     try {
       const response = await api.post(`/api/resume/match`, {
@@ -266,24 +269,56 @@ const Dashboard = () => {
             </button>
 
             {matchResult && (
-              <div className="mt-8 bg-emerald-50/40 p-8 rounded-[2rem] border border-emerald-100/50 animate-in fade-in slide-in-from-top-2">
+              <div className={`mt-8 p-8 rounded-[2rem] border animate-in fade-in slide-in-from-top-2 shadow-sm ${
+                matchResult.matchScore >= 50 
+                  ? "bg-emerald-50/40 border-emerald-100/50" 
+                  : matchResult.matchScore >= 30
+                  ? "bg-amber-50/40 border-amber-100/50"
+                  : "bg-rose-50/40 border-rose-100/50"
+              }`}>
                 <div className="flex items-center gap-10 flex-wrap md:flex-nowrap">
-                  <div className="text-center min-w-[100px]">
-                    <div className="text-6xl font-black text-emerald-500">{matchResult.matchScore}%</div>
-                    <p className="text-[10px] text-emerald-600/60 font-black uppercase mt-2 tracking-widest">Match Score</p>
+                  <div className="text-center min-w-[120px]">
+                    <div className={`text-6xl font-black ${
+                      matchResult.matchScore >= 50 ? "text-emerald-500" : matchResult.matchScore >= 30 ? "text-amber-500" : "text-rose-500"
+                    }`}>
+                      {matchResult.matchScore}%
+                    </div>
+                    <p className={`text-[10px] font-black uppercase mt-2 tracking-widest ${
+                      matchResult.matchScore >= 50 ? "text-emerald-600/60" : matchResult.matchScore >= 30 ? "text-amber-600/60" : "text-rose-600/60"
+                    }`}>Match Score</p>
                   </div>
-                  <div className="flex-1 flex flex-wrap gap-2">
-                    {matchResult.matchingSkills?.slice(0, 6).map((s) => (
-                      <span key={s} className="px-3 py-1 bg-white text-emerald-600 text-[10px] font-black rounded-lg border border-emerald-100 shadow-sm">✓ {s}</span>
-                    ))}
-                    {matchResult.missingSkills?.slice(0, 6).map((s) => (
-                      <span key={s} className="px-3 py-1 bg-white text-rose-500 text-[10px] font-black rounded-lg border border-rose-100 shadow-sm">× {s}</span>
-                    ))}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-4">
+                      <h4 className="text-lg font-black text-[#111322]">{matchResult.role}</h4>
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+                        matchResult.matchScore >= 50 ? "bg-emerald-100 text-emerald-700" : matchResult.matchScore >= 30 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                      }`}>
+                        {matchResult.matchScore >= 80 ? "Perfect Match" : matchResult.matchScore >= 50 ? "Good Match" : matchResult.matchScore >= 30 ? "Potential" : "Roadmap Required"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {matchResult.matchingSkills?.slice(0, 8).map((s) => (
+                        <span key={s} className="px-3 py-1 bg-white text-emerald-600 text-[10px] font-black rounded-lg border border-emerald-100 shadow-sm">✓ {s}</span>
+                      ))}
+                      {matchResult.missingSkills?.slice(0, 8).map((s) => (
+                        <span key={s} className="px-3 py-1 bg-white text-rose-500 text-[10px] font-black rounded-lg border border-rose-100 shadow-sm">× {s}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <p className="mt-6 text-[13px] text-gray-600 font-bold italic leading-relaxed border-l-2 border-emerald-200 pl-4 whitespace-pre-line">
+                <p className={`mt-6 text-[13px] font-bold italic leading-relaxed border-l-2 pl-4 whitespace-pre-line ${
+                  matchResult.matchScore >= 50 ? "text-gray-600 border-emerald-200" : matchResult.matchScore >= 30 ? "text-gray-600 border-amber-200" : "text-gray-600 border-rose-200"
+                }`}>
                   {matchResult.explanation}
                 </p>
+              </div>
+            )}
+
+            {!matchResult && hasSearched && !isMatching && (
+              <div className="mt-10 bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 text-center animate-in fade-in slide-in-from-top-2">
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Analysis Complete</p>
+                <h4 className="text-lg font-black text-[#111322]">No Matching Roles Found</h4>
+                <p className="text-xs text-gray-500 mt-2 max-w-xs mx-auto">Try entering a more common technical role like 'Frontend Developer' or 'Data Analyst'.</p>
               </div>
             )}
           </div>

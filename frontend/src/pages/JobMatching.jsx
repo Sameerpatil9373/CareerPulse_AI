@@ -37,26 +37,27 @@ const JobMatching = () => {
     fetchRecommendations();
   }, []);
 
-  const handleApply = (role, index) => {
-    const query = encodeURIComponent(`"${role}"`);
-    // Alternating Logic: 1st (index 0) is LinkedIn, 2nd (index 1) is Naukri
-    if (index % 2 === 0) {
+  const handleApply = (role, platform) => {
+    const query = encodeURIComponent(role);
+    if (platform === "linkedin") {
+      // Improved LinkedIn Search: Uses f_TPR=r86400 (Last 24h) or generic search with keywords
       window.open(
-        `https://www.linkedin.com/jobs/search/?keywords=${query}&location=India`,
+        `https://www.linkedin.com/jobs/search/?keywords=${query}&location=India&f_TPR=r2592000`,
         "_blank"
       );
     } else {
+      // Naukri's common search URL format
       window.open(
-        `https://www.naukri.com/${role.toLowerCase().replace(/ /g, "-")}-jobs-in-india`,
+        `https://www.naukri.com/${role.toLowerCase().replace(/ /g, "-")}-jobs?k=${query}`,
         "_blank"
       );
     }
   };
 
   const getScoreColor = (score) => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 60) return "bg-yellow-500";
-    return "bg-red-500";
+    if (score >= 80) return "bg-emerald-500";
+    if (score >= 50) return "bg-amber-500";
+    return "bg-rose-500";
   };
 
   if (loading)
@@ -85,56 +86,78 @@ const JobMatching = () => {
         {jobMatches.map((job, i) => (
           <div
             key={i}
-            className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between"
+            className="group bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
           >
             <div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                  <Briefcase size={16} className="text-indigo-600" />
-                  <h3 className="text-lg font-bold leading-tight">{job.role}</h3>
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                    <Briefcase size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#111322] leading-tight">{job.role}</h3>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Recommended Path</p>
+                  </div>
                 </div>
-                <span className={`text-[10px] font-black px-2 py-1 rounded-full text-white ${getScoreColor(job.matchScore)}`}>
+                <span className={`text-[9px] font-black px-2.5 py-1 rounded-lg text-white shadow-sm flex items-center justify-center min-w-[50px] ${getScoreColor(job.matchScore)}`}>
                   {job.matchScore}% FIT
                 </span>
               </div>
 
-              <div className="mb-4">
-                <p className="text-[10px] font-bold uppercase text-gray-400 mb-2">Top Strengths</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {job.matchingSkills?.slice(0, 6).map((skill) => (
-                    <span key={skill} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-green-50 text-green-700 border border-green-100">
-                      <CheckCircle2 size={10} />
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {job.missingSkills?.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-[10px] font-bold uppercase text-gray-400 mb-2">Skills to Gain</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-wider flex items-center gap-2">
+                    <CheckCircle2 size={12} className="text-emerald-500" /> Top Strengths
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {job.missingSkills.slice(0, 6).map((skill) => (
-                      <span key={skill} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-100">
-                        <XCircle size={10} />
+                    {job.matchingSkills?.slice(0, 6).map((skill) => (
+                      <span key={skill} className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-50/50 text-emerald-700 border border-emerald-100 font-bold capitalize">
                         {skill}
                       </span>
                     ))}
                   </div>
                 </div>
-              )}
 
-              <p className="text-xs text-gray-500 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
-                "{job.explanation}"
-              </p>
+                {job.missingSkills?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-wider flex items-center gap-2">
+                      <XCircle size={12} className="text-rose-500" /> Skills to Gain
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {job.missingSkills.slice(0, 6).map((skill) => (
+                        <span key={skill} className="text-[10px] px-2.5 py-1 rounded-lg bg-rose-50/50 text-rose-700 border border-rose-100 font-bold capitalize">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-gray-50/80 p-4 rounded-xl border border-gray-100/50">
+                  <p className="text-[12px] text-gray-600 leading-relaxed font-medium italic">
+                    "{job.explanation}"
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <button
-              onClick={() => handleApply(job.role, i)}
-              className="mt-6 flex items-center justify-center gap-2 bg-[#111322] text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-600 transition shadow-md active:scale-95"
-            >
-              Explore {job.role} on {i % 2 === 0 ? "LinkedIn" : "Naukri"} <ExternalLink size={14} />
-            </button>
+            <div className="mt-6 pt-4 border-t border-gray-50/80">
+              <p className="text-[9px] font-black uppercase text-gray-700 mb-3 tracking-[0.2em] text-center">Find jobs on</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleApply(job.role, "linkedin")}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#111322] text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-md active:scale-95 group/btn"
+                >
+                  LinkedIn <ExternalLink size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                </button>
+                <button
+                  onClick={() => handleApply(job.role, "naukri")}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#111322] text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-md active:scale-95 group/btn"
+                >
+                  Naukri <ExternalLink size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>

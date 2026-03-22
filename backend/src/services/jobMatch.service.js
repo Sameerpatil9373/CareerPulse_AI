@@ -54,36 +54,60 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
       "python", "sql", "excel", "tableau", "pandas", "data visualization"
     ],
     "Software Tester": [
-      "selenium", "testing", "manual testing", "automation", "jest"
+      "selenium", "testing", "manual testing", "automation", "jest", "cypress", "qa", "quality assurance"
+    ],
+    "Database Administrator": [
+      "sql", "mysql", "postgresql", "mongodb", "database design", "query optimization", "nosql", "backup", "recovery", "dba"
+    ],
+    "AI/ML Engineer": [
+      "python", "pytorch", "tensorflow", "machine learning", "deep learning", "nlp", "computer vision", "scikit-learn", "data science"
+    ],
+    "DevOps Engineer": [
+      "docker", "kubernetes", "jenkins", "aws", "azure", "linux", "ci/cd", "terraform", "ansible"
+    ],
+    "Cloud Architect": [
+      "aws", "azure", "gcp", "cloud computing", "serverless", "iam", "s3", "ec2", "networking"
+    ],
+    "Cyber Security Analyst": [
+      "network security", "penetration testing", "firewalls", "cryptography", "ethical hacking", "vulnerability assessment"
+    ],
+    "Mobile App Developer": [
+      "react native", "flutter", "swift", "kotlin", "android studio", "ios development", "dart", "mobile ui"
+    ],
+    "Java Backend Developer": [
+      "java", "spring boot", "hibernate", "maven", "microservices", "junit", "jpa"
     ]
   };
 
   const results = [];
+  const isExplicitSearch = userTargetRole && userTargetRole !== "RECOMMEND_MULTIPLE_ROLES_BASED_ON_SKILLS";
 
   for (const role in roleTemplates) {
-    // FIX: Much smarter, stricter matching for user input
-    if (userTargetRole && userTargetRole !== "RECOMMEND_MULTIPLE_ROLES_BASED_ON_SKILLS") {
+    let isSearchMatch = false;
+    
+    if (isExplicitSearch) {
       const searchTarget = userTargetRole.toLowerCase().trim();
       const roleName = role.toLowerCase();
       
-      // 1. Check for a direct match first
-      if (!roleName.includes(searchTarget) && !searchTarget.includes(roleName)) {
+      // 1. Direct or partial match for the role name
+      if (roleName.includes(searchTarget) || searchTarget.includes(roleName)) {
+        isSearchMatch = true;
+      } else {
+        // 2. Word-based matching (more fuzzy)
+        const genericWords = ["software", "developer", "engineer", "specialist", "analyst", "administrator", "database", "junior", "senior", "lead"];
+        const searchWords = searchTarget.split(/[\s/,-]+/).filter(w => w.length > 2 && !genericWords.includes(w));
+        const roleWords = roleName.split(/[\s/,-]+/).filter(w => w.length > 2 && !genericWords.includes(w));
         
-        // 2. If no direct match, check unique keywords (ignore generic words)
-        const genericWords = ["software", "developer", "engineer", "specialist", "analyst", "administrator"];
-        const searchWords = searchTarget.split(" ").filter(w => w.length > 2 && !genericWords.includes(w));
-        
-        const isMatch = searchWords.length > 0 && searchWords.some(word => roleName.includes(word));
-        
-        if (!isMatch) {
-          continue; // Skip this role if it is definitely not a match
-        }
+        isSearchMatch = searchWords.length > 0 && searchWords.some(sWord => 
+          roleWords.some(rWord => rWord.includes(sWord) || sWord.includes(rWord))
+        );
       }
+      
+      if (!isSearchMatch) continue;
     }
 
     const roleSkills = roleTemplates[role];
 
-    // Strict string matching to prevent "java" matching inside "javascript"
     const matchingSkills = roleSkills.filter(skill =>
       resumeSkills.some(s => {
         if (skill === "java" && s === "javascript") return false;
@@ -92,14 +116,12 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
       })
     );
 
-    // Identify missing skills
     const missingSkills = roleSkills.filter(skill => !matchingSkills.includes(skill));
-
-    // Match score calculation
     const matchScore = Math.round((matchingSkills.length / roleSkills.length) * 100);
 
-    // FIX: Remove 0% matches and ensure minimum match quality
-    if (matchScore > 0) {
+    // For recommendations, show roles with >= 30% match
+    // For explicit searches, show even if 0% match
+    if (isExplicitSearch || matchScore >= 30) {
       results.push({
         role,
         matchScore,
@@ -110,15 +132,46 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
             ? "Strong alignment with your current stack."
             : matchScore >= 50
             ? "Good fit. Focus on identified skill gaps to qualify."
-            : "Foundation present. Consider learning the missing technologies for this path."
+            : matchScore >= 30
+            ? "Foundation present. Consider learning the missing technologies for this path."
+            : matchScore > 0
+            ? "Partial skills detected. Here is your growth roadmap."
+            : "No direct skill match found. Here is the roadmap to reach this role."
       });
     }
   }
 
-  // Sort by score and return top results
-  return results
-    .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, 5);
+  // If explicit search and no direct role name match, find roles with highest matching skills
+  if (isExplicitSearch && results.length === 0) {
+    for (const role in roleTemplates) {
+      const roleSkills = roleTemplates[role];
+      const matchingSkills = roleSkills.filter(skill =>
+        resumeSkills.some(s => s === skill || s.includes(skill) || skill.includes(s))
+      );
+      const missingSkills = roleSkills.filter(skill => !matchingSkills.includes(skill));
+      const matchScore = Math.round((matchingSkills.length / roleSkills.length) * 100);
+
+      if (matchScore > 0) {
+        results.push({
+          role,
+          matchScore,
+          matchingSkills,
+          missingSkills,
+          explanation: "Role name didn't match, but your skills suggest this path."
+        });
+      }
+    }
+  }
+
+  // Sort by match score descending
+  results.sort((a, b) => b.matchScore - a.matchScore);
+
+  // If explicit search, return all matches (usually 1).
+  if (isExplicitSearch) return results;
+
+  // If recommendation mode, return top 5 roles that meet the 30% threshold.
+  // If fewer than 5 meet the threshold, just return those.
+  return results.slice(0, 5);
 };
 
 module.exports = { analyzeJobMatch };
