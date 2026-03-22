@@ -1,13 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
-  Upload, 
   Briefcase, 
   Sparkles, 
   History, 
-  Settings, 
   LogOut,
-  BookOpen
+  BookOpen,
+  Send
 } from "lucide-react";
 import { getCurrentUser, logout } from "../../services/authService";
 
@@ -75,9 +74,9 @@ const Sidebar = () => {
               <History size={18} /> 
               <span className="text-sm">History</span>
             </NavLink>
-            <NavLink to="/app/settings" className={linkClass}>
-              <Settings size={18} /> 
-              <span className="text-sm">Settings</span>
+            <NavLink to="/app/cold-email" className={linkClass}>
+              <Send size={18} /> 
+              <span className="text-sm">Networking</span>
             </NavLink>
           </div>
         </div>

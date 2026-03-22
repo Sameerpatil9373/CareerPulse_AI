@@ -1,12 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import Dashboard from "../pages/Dashboard";
-import UploadResume from "../pages/UploadResume";
 import JobMatching from "../pages/JobMatching";
 import AIInsights from "../pages/AIInsights";
 import AptitudePrep from "../pages/Aptitude"
 import History from "../pages/History";
-import Settings from "../pages/Settings";
+import ColdEmail from "../pages/ColdEmail";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -28,15 +27,14 @@ const AppRouter = () => {
               <DashboardLayout>
                 <Routes>
                   <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="upload" element={<UploadResume />} />
                   <Route path="job-matching" element={<JobMatching />} />
                   
                   {/* Ensure the path "insights" matches your Sidebar Link */}
                   <Route path="insights" element={<AIInsights />} />
                   <Route path="aptitude" element={<AptitudePrep />} />
+                  <Route path="cold-email" element={<ColdEmail />} />
                   
                   <Route path="history" element={<History />} />
-                  <Route path="settings" element={<Settings />} />
                   
                   {/* Catch-all for invalid /app paths */}
                   <Route path="*" element={<Navigate to="dashboard" replace />} />
