@@ -177,14 +177,8 @@ const AIInsights = () => {
         </button>
 
         <div className="flex gap-4">
-          <button
-            onClick={handleExportPDF}
-            disabled={data.isExporting}
-            className="bg-white border border-gray-100 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:shadow-md transition-all disabled:opacity-50"
-          >
-            {data.isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            {data.isExporting ? "Processing..." : "Export PDF"}
-          </button>
+      
+    
 
           <button
             onClick={() => {

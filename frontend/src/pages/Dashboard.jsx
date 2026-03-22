@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [aiProgress, setAiProgress] = useState(0);
 
   const fileInputRef = useRef(null);
+  const matchingSectionRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -147,34 +148,76 @@ const Dashboard = () => {
     }
   };
 
+  const handleApply = (role) => {
+    const query = encodeURIComponent(role);
+    window.open(`https://www.linkedin.com/jobs/search/?keywords=${query}`, '_blank');
+    window.open(`https://www.naukri.com/search?keywords=${query}`, '_blank');
+  };
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 pb-10 px-4">
       <div className="flex justify-between items-center mt-6">
         <h2 className="text-3xl font-black text-[#111322]">AI Dashboard</h2>
         {resumeData && (
-          <button
-            onClick={() => navigate("/app/insights", { state: { resumeId: resumeData._id } })}
-            className="flex items-center gap-2 text-indigo-600 font-black text-sm hover:translate-x-1 transition-transform"
-          >
-            Full Reasoning Report <ArrowRight size={18} />
-          </button>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => navigate("/app/insights", { state: { resumeId: resumeData._id } })}
+              className="group flex items-center gap-3 bg-white text-[#111322] px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl active:scale-95"
+            >
+              Intelligence Report <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button
+                onClick={() => matchingSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                className="group flex items-center gap-3 bg-indigo-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-indigo-600 transition-all shadow-xl active:scale-95 border border-transparent hover:border-indigo-600"
+              >
+                Dynamic Job Matching <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+          </div>
         )}
       </div>
 
       {error && (
-        <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl flex items-center gap-3 font-bold text-sm border border-rose-100 animate-in fade-in">
-          <AlertCircle size={18} /> {error}
+        <div className="bg-rose-50 text-rose-600 p-5 rounded-2xl flex items-center gap-4 font-bold text-sm border border-rose-100 animate-in slide-in-from-top-4 shadow-sm">
+          <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+            <AlertCircle size={18} />
+          </div>
+          {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card title="ATS Score" value={resumeData ? `${resumeData.atsScore}%` : "0%"} icon={BarChart3} />
-        <Card title="Detected Skills" value={resumeData ? resumeData.skillsDetected.length : "0"} icon={FileText} />
-        <Card title="Market Match" value={matchResult ? `${matchResult.matchScore}%` : "0%"} icon={Target} />
+      {/* Modern Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <Card 
-          title="AI Reasoning" 
-          value={aiProcessing ? "Analyzing..." : resumeData?.summary ? "Complete" : "Idle"} 
+          title="ATS Performance" 
+          value={resumeData ? `${resumeData.atsScore}%` : "0%"} 
+          icon={BarChart3} 
+          color="indigo" 
+          trend="Analyzed" 
+          percentage={resumeData ? resumeData.atsScore : 0}
+        />
+        <Card 
+          title="Core Competencies" 
+          value={resumeData ? resumeData.skillsDetected.length : "0"} 
+          icon={FileText} 
+          color="emerald" 
+          trend="Verified" 
+          percentage={resumeData ? (resumeData.skillsDetected.length / 20) * 100 : 0}
+        />
+        <Card 
+          title="Market Relevance" 
+          value={matchResult ? `${matchResult.matchScore}%` : "0%"} 
+          icon={Target} 
+          color="amber" 
+          trend="Matching" 
+          percentage={matchResult ? matchResult.matchScore : 0}
+        />
+        <Card 
+          title="AI Status" 
+          value={aiProcessing ? "Analyzing" : resumeData?.summary ? "Complete" : "Ready"} 
           icon={Zap} 
+          color="purple" 
+          trend="Neural"
+          percentage={aiProcessing ? aiProgress : resumeData?.summary ? 100 : 0}
         />
       </div>
 
@@ -200,7 +243,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
+          <div ref={matchingSectionRef} className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
             <h3 className="text-lg font-black mb-6 text-[#111322]">Dynamic Job Matching</h3>
             <textarea
               className="w-full p-6 rounded-[1.5rem] bg-gray-50/80 mb-6 outline-none min-h-[160px] font-medium border border-transparent focus:border-indigo-100 transition-all text-sm"

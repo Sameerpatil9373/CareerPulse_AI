@@ -193,17 +193,21 @@ const AptitudePrep = () => {
           </div>
         ) : (
           <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 pb-20">
-            <div className="flex justify-between items-center bg-[#111322] p-6 rounded-[2rem] text-white shadow-xl">
+            {/* Simplified Header matching image */}
+            <div className="flex justify-between items-center bg-[#111322] p-4 px-8 rounded-full text-white shadow-xl">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center border border-indigo-500/30">
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                     <CheckCircle2 className="text-indigo-400" size={20} />
                 </div>
-                <div>
+                <div className="flex flex-col">
                   <h3 className="text-sm font-black uppercase tracking-widest">Reasoning AI Daily Set</h3>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase">Industry-standard placement papers</p>
+                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Industry-standard placement papers</p>
                 </div>
               </div>
-              <button onClick={generateRandomQuestions} className="flex items-center gap-2 bg-indigo-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-indigo-500 transition-all active:scale-95">
+              <button 
+                onClick={generateRandomQuestions} 
+                className="flex items-center gap-2 bg-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-indigo-500 transition-all active:scale-95"
+              >
                 <RefreshCw size={14} /> Refresh Set
               </button>
             </div>
