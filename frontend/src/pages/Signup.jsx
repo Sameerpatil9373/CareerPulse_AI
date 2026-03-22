@@ -26,11 +26,11 @@ const Signup = () => {
     <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-xl shadow-indigo-100 border border-indigo-50">
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-[1.5rem] flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-indigo-200">
+          <div className="w-16 h-16 bg-[#6366F1] rounded-[1.5rem] flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-indigo-500/20 ring-8 ring-indigo-500/5 transition-transform hover:scale-105 cursor-pointer">
             <Sparkles size={32} fill="currentColor" />
           </div>
-          <h2 className="text-3xl font-black text-[#111322] tracking-tight">Create Account</h2>
-          <p className="text-gray-400 text-sm font-bold mt-2 uppercase tracking-widest">Join the AI Revolution</p>
+          <h2 className="text-3xl font-black text-[#111322] tracking-tight uppercase">CareerPulse AI</h2>
+          <p className="text-gray-400 text-[10px] font-black mt-2 uppercase tracking-[0.2em]">Join the Intelligent Career Platform</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-5">

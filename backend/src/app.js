@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("AI Resume Analyzer Backend Running...");
+  res.send("CareerPulse AI API is running...");
 });
 
 app.use("/api/auth", authRoutes);

@@ -68,7 +68,7 @@ const JobMatching = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto p-8 space-y-10">
+    <div className="max-w-7xl mx-auto p-0 space-y-10">
       <div className="flex justify-between items-center border-b pb-6">
         <div>
           <h2 className="text-3xl font-black text-[#111322]">Market Matcher</h2>

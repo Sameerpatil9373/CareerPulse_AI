@@ -30,15 +30,15 @@ const Sidebar = () => {
     }`;
 
   return (
-    <div className="w-72 h-screen bg-[#111322] text-white p-6 flex flex-col border-r border-white/5 sticky top-0">
+    <div className="w-68 h-screen bg-[#111322] text-white p-6 flex flex-col border-r border-white/5 sticky top-0">
       {/* Brand Header */}
-      <div className="flex items-center gap-3 mb-12 px-2 mt-2">
-        <div className="w-11 h-11 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-[14px] flex items-center justify-center shadow-xl shadow-indigo-500/20">
-          <Sparkles size={24} className="text-white fill-current" />
+      <div className="flex items-center gap-3 mb-12 px-1 mt-2">
+        <div className="w-10 h-10 bg-[#6366F1] rounded-[1rem] flex items-center justify-center shadow-lg shadow-indigo-500/20 transition-transform hover:scale-105 cursor-pointer">
+          <Sparkles size={20} className="text-white fill-white" />
         </div>
         <div>
-          <h1 className="text-lg font-black tracking-tight leading-none">AI Resume</h1>
-          <span className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Analyzer</span>
+          <h1 className="text-base font-black tracking-tight leading-none uppercase text-white">CareerPulse</h1>
+          <span className="text-indigo-400 text-[9px] font-black uppercase tracking-[0.2em] mt-1 block">Intelligence AI</span>
         </div>
       </div>
 
