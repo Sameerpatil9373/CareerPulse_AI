@@ -86,17 +86,18 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
     let isSearchMatch = false;
     
     if (isExplicitSearch) {
-      const searchTarget = userTargetRole.toLowerCase().trim();
-      const roleName = role.toLowerCase();
+      const searchTarget = userTargetRole.toLowerCase().replace(/[^a-z0-9]/g, " ").trim();
+      const roleName = role.toLowerCase().replace(/[^a-z0-9]/g, " ").trim();
       
-      // 1. Direct or partial match for the role name
+      // 1. Direct or partial match for the role name (normalized)
       if (roleName.includes(searchTarget) || searchTarget.includes(roleName)) {
         isSearchMatch = true;
       } else {
         // 2. Word-based matching (more fuzzy)
+        // Keep acronyms like AI, ML, UI, UX (length 2)
         const genericWords = ["software", "developer", "engineer", "specialist", "analyst", "administrator", "database", "junior", "senior", "lead"];
-        const searchWords = searchTarget.split(/[\s/,-]+/).filter(w => w.length > 2 && !genericWords.includes(w));
-        const roleWords = roleName.split(/[\s/,-]+/).filter(w => w.length > 2 && !genericWords.includes(w));
+        const searchWords = searchTarget.split(/\s+/).filter(w => w.length >= 2 && !genericWords.includes(w));
+        const roleWords = roleName.split(/\s+/).filter(w => w.length >= 2 && !genericWords.includes(w));
         
         isSearchMatch = searchWords.length > 0 && searchWords.some(sWord => 
           roleWords.some(rWord => rWord.includes(sWord) || sWord.includes(rWord))
@@ -141,29 +142,31 @@ const analyzeJobMatch = async (resumeText, skills, userTargetRole = "") => {
     }
   }
 
-  // If explicit search and no direct role name match, find roles with highest matching skills
+  // Sort by match score descending
+  results.sort((a, b) => b.matchScore - a.matchScore);
+
+  // If explicit search and no results found yet (even 0% ones), try finding roles by skills
   if (isExplicitSearch && results.length === 0) {
     for (const role in roleTemplates) {
       const roleSkills = roleTemplates[role];
       const matchingSkills = roleSkills.filter(skill =>
         resumeSkills.some(s => s === skill || s.includes(skill) || skill.includes(s))
       );
-      const missingSkills = roleSkills.filter(skill => !matchingSkills.includes(skill));
       const matchScore = Math.round((matchingSkills.length / roleSkills.length) * 100);
 
-      if (matchScore > 0) {
+      if (matchScore > 30) { // Only fallback if there's a decent skill match
         results.push({
           role,
           matchScore,
           matchingSkills,
-          missingSkills,
-          explanation: "Role name didn't match, but your skills suggest this path."
+          missingSkills: roleSkills.filter(s => !matchingSkills.includes(s)),
+          explanation: `We couldn't find a direct match for your search, but your skills are a ${matchScore}% match for this related role.`
         });
       }
     }
   }
 
-  // Sort by match score descending
+  // Sort again in case fallback results were added
   results.sort((a, b) => b.matchScore - a.matchScore);
 
   // If explicit search, return all matches (usually 1).

@@ -36,10 +36,10 @@ exports.uploadResume = async (req, res) => {
     
     // Grouping keywords to allow for synonyms
     const sectionGroups = {
-      education: ["education", "university", "college", "degree", "academic", "school"],
-      experience: ["experience", "work", "employment", "history", "career", "professional", "internship"],
+      education: ["education", "university", "college", "degree", "academic", "school", "qualification"],
+      experience: ["experience", "work", "employment", "history", "career", "professional", "internship", "position", "responsibility"],
       projects: ["projects", "portfolio", "github", "deployed", "personal work"],
-      skills: ["skills", "technologies", "expertise", "competencies", "tools", "stack"]
+      skills: ["skills", "technologies", "expertise", "competencies", "tools", "stack", "technical"]
     };
 
     // Check which section groups have at least one match
@@ -47,25 +47,31 @@ exports.uploadResume = async (req, res) => {
       sectionGroups[group].some(keyword => textLower.includes(keyword))
     );
 
-    const missingSections = Object.keys(sectionGroups).filter(group => !foundSections.includes(group));
-
-    // Check for other common resume indicators
-    const otherKeywords = ["summary", "objective", "contact", "linkedin", "achievements", "certifications", "email", "phone"];
+    const otherKeywords = ["summary", "objective", "contact", "linkedin", "achievements", "certifications", "email", "phone", "profile", "address", "hobby", "language"];
     const matchedOther = otherKeywords.filter(k => textLower.includes(k));
 
-    /**
-     * REJECTION LOGIC (Relaxed): 
-     * - Must have at least 3 out of 4 major sections (or 2 if the resume is otherwise rich)
-     * - OR must have a decent number of other keywords
-     * - Minimum length lowered to 300
-     */
-    const isRichInKeywords = matchedOther.length >= 4;
-    const hasEnoughSections = foundSections.length >= 3 || (foundSections.length >= 2 && isRichInKeywords);
+    // NEW: Real-world resume pattern checks (Regex)
+    const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+    const phonePattern = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
+    
+    const hasEmail = emailPattern.test(extractedText);
+    const hasPhone = phonePattern.test(extractedText);
 
-    if (!hasEnoughSections || extractedText.trim().length < 300) {
-      console.log("❌ Rejected File: Found sections:", foundSections, "Other matches:", matchedOther.length);
+    /**
+     * ULTRA STRICT REJECTION LOGIC: 
+     * - MUST have at least 3 out of 4 major sections
+     * - MUST have at least 4 contact/other keywords
+     * - MUST have either a valid email or a valid phone number pattern
+     * - Minimum length 600 characters
+     */
+    const hasEnoughSections = foundSections.length >= 3;
+    const hasEnoughContact = matchedOther.length >= 4;
+    const hasEssentialInfo = hasEmail || hasPhone;
+
+    if (!hasEnoughSections || !hasEnoughContact || !hasEssentialInfo || extractedText.trim().length < 600) {
+      console.log("❌ Rejected File: Sections:", foundSections.length, "Contact:", matchedOther.length, "Email/Phone:", hasEssentialInfo);
       return res.status(400).json({
-        message: `Invalid file: This document does not appear to be a complete resume. A professional resume should clearly include sections like Education, Experience, and Skills. Please ensure your headings are clear.`
+        message: `This file was rejected because it doesn't look like a real resume. A professional resume must include clear headings (Education, Experience, Skills), contact details (Email or Phone), and substantial professional content. Please upload a valid resume.`
       });
     }
 

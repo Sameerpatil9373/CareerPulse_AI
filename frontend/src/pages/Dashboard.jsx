@@ -243,6 +243,11 @@ const Dashboard = () => {
               <p className="text-xl font-bold text-[#111322]">
                 {isUploading ? "Parsing document..." : "Upload New Resume"}
               </p>
+              {!isUploading && (
+                <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest">
+                  Supports PDF, DOCX (Max 5MB)
+                </p>
+              )}
             </div>
           </div>
 

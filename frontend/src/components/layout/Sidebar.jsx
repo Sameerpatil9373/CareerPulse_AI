@@ -53,10 +53,6 @@ const Sidebar = () => {
               <LayoutDashboard size={18} /> 
               <span className="text-sm">Dashboard</span>
             </NavLink>
-            <NavLink to="/app/upload" className={linkClass}>
-              <Upload size={18} /> 
-              <span className="text-sm">Upload Resume</span>
-            </NavLink>
             <NavLink to="/app/job-matching" className={linkClass}>
               <Briefcase size={18} /> 
               <span className="text-sm">Job Matching</span>
