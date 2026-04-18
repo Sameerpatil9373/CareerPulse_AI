@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Resume Analyzer - BSc IT Thesis Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+body{font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.5;margin:40px 60px;text-align:justify;color:#000}
+h1{font-size:16pt;text-align:center;font-weight:bold;margin-top:30px}
+h2{font-size:14pt;font-weight:bold;text-align:left}
+h3{font-size:13pt;font-weight:bold;text-align:left}
+.center{text-align:center}
+.page-break{page-break-after:always;margin-bottom:60px}
+table{width:100%;border-collapse:collapse;margin:15px 0}
+table,th,td{border:1px solid #000}
+th,td{padding:8px 12px;text-align:left;font-size:11pt}
+th{background:#f0f0f0;font-weight:bold}
+.chapter-box{border:2px solid #000;padding:15px;margin:15px 0;background:#f9f9f9}
+.signature-line{display:inline-block;width:200px;border-bottom:1px solid #000;margin:0 20px}
+.sig-row{display:flex;justify-content:space-between;margin:30px 0}
+code{font-family:'Courier New',monospace;font-size:10pt;background:#f4f4f4;padding:2px 5px}
+pre{background:#f4f4f4;padding:15px;border:1px solid #ddd;overflow-x:auto;font-size:10pt;line-height:1.4}
+.mermaid-placeholder{border:2px solid #333;padding:20px;margin:15px 0;text-align:center;background:#fafafa;min-height:200px}
+ul,ol{margin:10px 0 10px 20px}
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="center" style="margin-top:80px">
+<h1 style="font-size:20pt;margin-bottom:5px">AI-Powered Resume Analyzer</h1>
+<h2 style="text-align:center;font-size:14pt;margin-top:5px">(CareerPulse AI)</h2>
+<br><br>
+<p style="font-size:13pt">Submitted In Partial Fulfillment of Requirements<br>For the Degree Of</p>
+<p style="font-size:15pt;font-weight:bold">Bachelor of Science<br>(Information Technology)</p>
+<br>
+<p style="font-size:13pt">By</p>
+<br>
+<p style="font-size:13pt">Roll No: 31031420003</p>
+<br><br>
+<p style="font-size:13pt">Guide<br><strong>Prof. Mousmi Pawar</strong></p>
+<br><br>
+<p style="font-size:13pt"><strong>Somaiya School of Basic and Applied Sciences,</strong><br>
+Somaiya Vidyavihar University<br>Vidyavihar, Mumbai - 400 077<br>2025-26</p>
+</div>
+<div class="page-break"></div>
+
+<!-- CERTIFICATE -->
+<div class="center"><h1>Somaiya Vidyavihar University</h1><h2 style="text-align:center">Certificate</h2></div>
+<p>This is to certify that the project report on dissertation entitled <strong>"AI-Powered Resume Analyzer (CareerPulse AI)"</strong> is a bonafide record of the dissertation work done by Mr./Ms. ______________________________ in the year 2025-2026 under the guidance of <strong>Prof. Mousmi Pawar</strong>, Department of Information Technology and Computer Science in partial fulfillment of requirement for the Bachelor of Science degree in Information Technology of Somaiya School of Basic and Applied Sciences, Somaiya Vidyavihar University.</p>
+<div class="sig-row"><div>________________<br>Guide</div><div>________________<br>Coordinator</div></div>
+<div class="sig-row"><div>________________<br>Head of the Department</div><div>________________<br>Dean</div></div>
+<p>Date:<br>Place: Mumbai-77</p>
+<div class="page-break"></div>
+
+<!-- CERTIFICATE OF APPROVAL -->
+<div class="center"><h1>Somaiya Vidyavihar University</h1><h2 style="text-align:center">Certificate of Approval of Examiners</h2></div>
+<p>This is to certify that the project report on dissertation entitled <strong>"AI-Powered Resume Analyzer (CareerPulse AI)"</strong> is a bonafide record of the dissertation work done by Mr./Ms. ______________________________ in partial fulfillment of requirement for the Bachelor of Science degree in Information Technology of Somaiya School of Basic and Applied Sciences, Somaiya Vidyavihar University.</p>
+<div class="sig-row"><div>________________<br>External Examiner / Expert</div><div>________________<br>Internal Examiner / Guide</div></div>
+<p>Date:<br>Place: Mumbai-77</p>
+<div class="page-break"></div>
+
+<!-- DECLARATION -->
+<div class="center"><h1>Somaiya Vidyavihar University</h1><h2 style="text-align:center">DECLARATION</h2></div>
+<p>I declare that this written report submission represents the work done based on my and/or others' ideas with adequately cited and referenced the original source. I also declare that I have adhered to all principles of academic honesty and integrity as I have not misinterpreted or fabricated or falsified any idea/data/fact/source/original work/matter in my submission.</p>
+<p>I understand that any violation of the above will cause disciplinary action by the college and may evoke the penal action from the sources which have not been properly cited or from whom proper permission is not sought.</p>
+<br><br>
+<p>_______________________________<br>Signature of the Student</p>
+<p>_______________________________<br>Name of the Student</p>
+<p>_______________________________<br>Roll No.</p>
+<p>Date:<br>Place: Mumbai-77</p>
+<div class="page-break"></div>
+
+<!-- INDEX -->
+<h1>Index</h1>
+<table>
+<tr><th>Sr. No</th><th>Topic</th><th>Page No.</th></tr>
+<tr><td>1</td><td>Chapter 1 – Introduction</td><td></td></tr>
+<tr><td>1.1</td><td>Introduction</td><td></td></tr>
+<tr><td>1.2</td><td>Description</td><td></td></tr>
+<tr><td>1.3</td><td>Stakeholders</td><td></td></tr>
+<tr><td>2</td><td>Chapter 2 – Literature Survey</td><td></td></tr>
+<tr><td>2.1</td><td>Description of Existing Systems</td><td></td></tr>
+<tr><td>2.2</td><td>Limitations of Present Systems</td><td></td></tr>
+<tr><td>3</td><td>Chapter 3 – Methodology</td><td></td></tr>
+<tr><td>3.1</td><td>Technologies Used and Their Description</td><td></td></tr>
+<tr><td>3.2</td><td>Event Table</td><td></td></tr>
+<tr><td>3.3</td><td>Use Case Diagram and Use Case Descriptions</td><td></td></tr>
+<tr><td>3.4</td><td>Entity-Relationship Diagram</td><td></td></tr>
+<tr><td>3.5</td><td>Flow Diagram</td><td></td></tr>
+<tr><td>3.6</td><td>Class Diagram</td><td></td></tr>
+<tr><td>3.7</td><td>Sequence Diagram</td><td></td></tr>
+<tr><td>3.8</td><td>State Diagram</td><td></td></tr>
+<tr><td>3.9</td><td>Menu Tree</td><td></td></tr>
+<tr><td>4</td><td>Chapter 4 – Implementation</td><td></td></tr>
+<tr><td>4.1</td><td>List of Tables with Attributes and Constraints</td><td></td></tr>
+<tr><td>4.2</td><td>System Coding</td><td></td></tr>
+<tr><td>4.3</td><td>Screen Layouts and Report Layouts</td><td></td></tr>
+<tr><td>5</td><td>Chapter 5 – Analysis and Related Work</td><td></td></tr>
+<tr><td>6</td><td>Chapter 6 – Conclusion and Future Work</td><td></td></tr>
+<tr><td>6.1</td><td>Conclusion</td><td></td></tr>
+<tr><td>6.2</td><td>Future Work</td><td></td></tr>
+<tr><td>6.3</td><td>References</td><td></td></tr>
+</table>
+<div class="page-break"></div>
+
+<!-- LIST OF FIGURES -->
+<h1>List of Figures</h1>
+<table>
+<tr><th>Sr. No.</th><th>Name of the Figure</th><th>Page No.</th></tr>
+<tr><td>3.1</td><td>System Architecture Diagram</td><td></td></tr>
+<tr><td>3.2</td><td>Use Case Diagram</td><td></td></tr>
+<tr><td>3.3</td><td>Entity-Relationship Diagram</td><td></td></tr>
+<tr><td>3.4</td><td>Data Flow Diagram (Level 0)</td><td></td></tr>
+<tr><td>3.5</td><td>Data Flow Diagram (Level 1)</td><td></td></tr>
+<tr><td>3.6</td><td>Class Diagram</td><td></td></tr>
+<tr><td>3.7</td><td>Sequence Diagram – Resume Upload & Analysis</td><td></td></tr>
+<tr><td>3.8</td><td>State Diagram – Resume Processing</td><td></td></tr>
+<tr><td>3.9</td><td>Menu Tree / Navigation Structure</td><td></td></tr>
+</table>
+
+<h1>List of Tables</h1>
+<table>
+<tr><th>Sr. No.</th><th>Name of the Table</th><th>Page No.</th></tr>
+<tr><td>3.1</td><td>Technologies Used</td><td></td></tr>
+<tr><td>3.2</td><td>Event Table</td><td></td></tr>
+<tr><td>4.1</td><td>User Collection Schema</td><td></td></tr>
+<tr><td>4.2</td><td>Resume Collection Schema</td><td></td></tr>
+<tr><td>4.3</td><td>ATS Scoring Matrix</td><td></td></tr>
+</table>
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 1 ==================== -->
+<h1>Chapter 1<br>Introduction</h1>
+<div class="chapter-box">
+This chapter introduces the AI-Powered Resume Analyzer (CareerPulse AI) system. It presents the motivation behind developing an intelligent resume analysis platform, provides a comprehensive description of the system's purpose and scope, and identifies all key stakeholders who benefit from the application.
+</div>
+
+<h2>1.1 Introduction</h2>
+<p>In today's highly competitive job market, job seekers face tremendous challenges in crafting resumes that effectively represent their skills and experiences. Recruiters, on the other hand, are inundated with hundreds or thousands of applications, making the manual screening process inefficient and prone to human bias. Applicant Tracking Systems (ATS) have become the standard gatekeepers in modern recruitment pipelines, automatically filtering resumes based on keyword matching, formatting, and relevance scoring. However, most job seekers lack awareness of how ATS systems operate, resulting in well-qualified candidates being rejected due to poor resume formatting or missing keywords.</p>
+
+<p>The AI-Powered Resume Analyzer, branded as <strong>CareerPulse AI</strong>, addresses this critical gap by leveraging artificial intelligence to provide comprehensive, automated resume analysis. The system parses uploaded resumes (PDF and DOCX formats), detects technical skills using both dictionary-based matching and AI inference, computes an ATS compatibility score, predicts suitable job roles, generates AI-powered hiring insights using the Ollama large language model (gemma3:1b), and performs intelligent job-role matching with gap analysis.</p>
+
+<p>The motivation behind this project stems from the observation that most free resume analysis tools offer superficial feedback — limited to word count or basic formatting checks. CareerPulse AI goes significantly further by combining Natural Language Processing (NLP), pattern recognition, machine learning inference, and rule-based expert systems to deliver a holistic career intelligence platform. The system is built as a full-stack web application using the MERN stack (MongoDB, Express.js, React, Node.js) with integration to locally-hosted AI models via Ollama, ensuring data privacy and zero API cost for AI inference.</p>
+
+<h2>1.2 Description</h2>
+<p>CareerPulse AI is a full-stack web application that provides the following core functionalities:</p>
+<ol>
+<li><strong>Resume Upload & Parsing:</strong> Users upload PDF or DOCX resumes. The system extracts text content using <code>pdf-parse</code> and <code>mammoth</code> libraries, then validates whether the document is a genuine resume through multi-layered heuristic checks (section detection, contact information verification, and minimum content thresholds).</li>
+<li><strong>AI-Powered Skill Detection:</strong> Technical skills are identified using a hybrid approach combining dictionary matching against 40+ common technologies, technology stack inference (e.g., MERN → MongoDB + Express + React + Node), and implicit skill logic (e.g., React implies JavaScript, HTML, CSS).</li>
+<li><strong>ATS Score Calculation:</strong> A dynamic scoring algorithm evaluates resumes across four dimensions — skills breadth (0–35 points), experience depth (0–20 points), project coverage (0–20 points), and formatting quality (0–10 points) — producing a realistic score capped at 88.</li>
+<li><strong>Role Prediction:</strong> Based on detected skills, the system predicts the most suitable job role (Full Stack Developer, Frontend Developer, Backend Developer, Software Tester, Data Analyst, etc.).</li>
+<li><strong>AI Insights Generation:</strong> Using the Ollama gemma3:1b model, the system generates a comprehensive hiring report containing a 9-10 line professional summary, 8 tailored interview questions (mix of short technical, project-specific, and advanced questions), and a market suitability explanation.</li>
+<li><strong>Job-Role Matching Engine:</strong> Compares user skills against 12 predefined role templates, calculating match percentages and identifying skill gaps with actionable roadmaps.</li>
+<li><strong>Aptitude Testing:</strong> Built-in aptitude assessment module for technical skill evaluation.</li>
+<li><strong>Cold Email Generator:</strong> AI-powered professional email drafting tool for job applications.</li>
+<li><strong>User Authentication:</strong> Secure JWT-based authentication with Google OAuth integration, password hashing via bcrypt.</li>
+</ol>
+
+<h2>1.3 Stakeholders</h2>
+<table>
+<tr><th>Stakeholder</th><th>Role</th><th>Interest</th></tr>
+<tr><td>Job Seekers / Students</td><td>Primary Users</td><td>Upload resumes, receive AI feedback, improve ATS scores, identify skill gaps, prepare for interviews</td></tr>
+<tr><td>Career Counselors</td><td>Secondary Users</td><td>Use the platform to advise students on resume improvements and career paths</td></tr>
+<tr><td>Recruiters / HR Professionals</td><td>Indirect Beneficiaries</td><td>Receive higher-quality, ATS-optimized resumes from candidates</td></tr>
+<tr><td>Educational Institutions</td><td>Institutional Users</td><td>Integrate the tool into placement cells for student career development</td></tr>
+<tr><td>System Administrator</td><td>Technical Operator</td><td>Deploy, maintain, and scale the application infrastructure</td></tr>
+<tr><td>AI Model Provider (Ollama)</td><td>Technology Partner</td><td>Provides the local LLM runtime for AI inference without cloud dependency</td></tr>
+</table>
+
+<p><strong>Summary:</strong> This chapter introduced CareerPulse AI as an intelligent resume analysis platform that combines NLP, AI inference, and expert systems to bridge the gap between job seekers and modern ATS requirements. Chapter 2 presents a literature survey of existing systems and their limitations.</p>
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 2 ==================== -->
+<h1>Chapter 2<br>Literature Survey</h1>
+<div class="chapter-box">
+This chapter reviews the existing literature and systems related to automated resume analysis. It examines current tools available in the market, discusses their approaches to resume parsing and evaluation, and identifies the limitations that CareerPulse AI aims to overcome.
+</div>
+
+<h2>2.1 Description of Existing Systems</h2>
+
+<p><strong>[1] Zety Resume Builder & Checker:</strong> Zety is one of the most popular online resume building platforms that includes a basic resume checker feature. It evaluates resumes based on formatting guidelines, section completeness, and word choice. Zety uses template-based analysis where resumes are compared against pre-approved layouts. While it excels at formatting guidance, it lacks deep technical skill analysis and does not provide ATS scoring or AI-generated interview preparation content [1].</p>
+
+<p><strong>[2] Jobscan ATS Resume Checker:</strong> Jobscan is a dedicated ATS optimization tool that allows users to paste their resume alongside a job description. It uses keyword matching algorithms to calculate a match score between the resume and job requirements. Jobscan supports multiple ATS systems including Taleo, iCIMS, and Greenhouse. However, Jobscan requires users to provide a specific job description for each analysis, lacks role prediction capabilities, and operates on a freemium model with limited free scans [2].</p>
+
+<p><strong>[3] Resume Worded:</strong> Resume Worded leverages AI to provide instant feedback on resumes and LinkedIn profiles. It scores resumes on a 100-point scale across categories including impact, brevity, style, and sections. The platform provides actionable suggestions for improvement. However, Resume Worded's AI analysis is focused on language quality rather than technical skill detection, and it does not offer job-role matching or interview question generation [3].</p>
+
+<p><strong>[4] Hiration Resume Builder:</strong> Hiration provides an AI-powered resume review service that checks for over 20 parameters including formatting, sections, skills presentation, and ATS compliance. It offers real-time suggestions as users build their resumes. The limitation of Hiration lies in its paid pricing model and the absence of local AI processing — all analysis is cloud-dependent, raising potential data privacy concerns for sensitive career documents [4].</p>
+
+<p><strong>[5] VMock Smart Resume Platform:</strong> VMock is an enterprise-grade AI resume analysis tool used by over 200 universities globally. It evaluates resumes on three dimensions: impact, presentation, and competencies. VMock uses machine learning trained on successful resumes from specific industries. While it is highly accurate for specific domains, VMock is not publicly accessible, requires institutional licensing, and does not support open-source AI models for customization [5].</p>
+
+<p><strong>[6] NLP-Based Resume Parsing Systems (Research):</strong> Academic research by Kopparapu et al. (2023) explored the use of Named Entity Recognition (NER) and transformer-based models for extracting structured data from unstructured resumes. Their approach used spaCy and BERT models to identify skills, education, and experience entities with 85% accuracy. However, these research prototypes remain limited to parsing and do not extend to ATS scoring, role prediction, or interview preparation — all features that CareerPulse AI integrates into a single platform [6].</p>
+
+<p><strong>[7] AI Interview Preparation Tools:</strong> Platforms like Pramp and InterviewBit focus on interview preparation through mock interviews and coding challenges. While they provide valuable interview practice, they are disconnected from the resume analysis pipeline. CareerPulse AI bridges this gap by generating interview questions directly from the candidate's resume content, ensuring contextually relevant preparation [7].</p>
+
+<h2>2.2 Limitations of Present Systems</h2>
+<p>Based on the comprehensive literature survey, the following limitations were identified in existing systems:</p>
+<ol>
+<li><strong>Fragmented User Experience:</strong> Existing tools specialize in one aspect — either resume building, ATS checking, or interview preparation. Users must navigate multiple platforms to get comprehensive career support. CareerPulse AI unifies all these functions in a single platform.</li>
+<li><strong>Cloud Dependency and Privacy Concerns:</strong> Most commercial tools process resumes on remote servers, raising concerns about data privacy for sensitive career documents. CareerPulse AI uses locally-hosted Ollama AI models, ensuring all data processing happens on the user's infrastructure.</li>
+<li><strong>Lack of Intelligent Skill Inference:</strong> Existing tools rely on exact keyword matching. If a resume mentions "React" but not "JavaScript," traditional tools miss the implicit skill relationship. CareerPulse AI implements a skill inference engine that automatically deduces related technologies.</li>
+<li><strong>No Role Prediction:</strong> Most resume checkers require users to specify their target role. CareerPulse AI automatically predicts the most suitable role based on the detected skill profile.</li>
+<li><strong>Static Analysis:</strong> Existing tools provide the same type of feedback regardless of the candidate's skill level or domain. CareerPulse AI dynamically adjusts its analysis based on detected skills and predicted roles.</li>
+<li><strong>Cost Barriers:</strong> Premium features of commercial tools (detailed ATS reports, unlimited scans, AI insights) are locked behind paid subscriptions. CareerPulse AI is a free, open-source alternative.</li>
+<li><strong>No Job-Role Gap Analysis:</strong> Existing systems do not provide a comparative analysis of user skills against multiple job roles simultaneously. CareerPulse AI's job matching engine compares skills against 12 role templates and provides actionable roadmaps for career transitions.</li>
+<li><strong>No Contextual Interview Preparation:</strong> Current interview tools use generic question banks. CareerPulse AI generates 8 tailored interview questions specifically derived from the candidate's resume content and detected project experience.</li>
+</ol>
+
+<p><strong>Summary:</strong> The literature survey revealed that while numerous resume analysis tools exist, none provides a unified, privacy-preserving, AI-powered platform that combines resume parsing, skill detection with inference, ATS scoring, role prediction, interview preparation, and job matching. CareerPulse AI addresses all these gaps. Chapter 3 details the methodology and system design.</p>
+<div class="page-break"></div>
+
+<!-- PLACEHOLDER FOR REMAINING CHAPTERS -->
+<div id="remaining-chapters"></div>
+
+</body>
+</html>

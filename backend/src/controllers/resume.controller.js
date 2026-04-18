@@ -59,16 +59,16 @@ exports.uploadResume = async (req, res) => {
 
     /**
      * ULTRA STRICT REJECTION LOGIC: 
-     * - MUST have at least 3 out of 4 major sections
-     * - MUST have at least 4 contact/other keywords
+     * - MUST have at least 2 out of 4 major sections (Education, Experience, Projects, Skills)
+     * - MUST have at least 2 contact/other keywords
      * - MUST have either a valid email or a valid phone number pattern
-     * - Minimum length 600 characters
+     * - Minimum length 400 characters
      */
-    const hasEnoughSections = foundSections.length >= 3;
-    const hasEnoughContact = matchedOther.length >= 4;
+    const hasEnoughSections = foundSections.length >= 2;
+    const hasEnoughContact = matchedOther.length >= 2;
     const hasEssentialInfo = hasEmail || hasPhone;
 
-    if (!hasEnoughSections || !hasEnoughContact || !hasEssentialInfo || extractedText.trim().length < 600) {
+    if (!hasEnoughSections || !hasEnoughContact || !hasEssentialInfo || extractedText.trim().length < 400) {
       console.log("❌ Rejected File: Sections:", foundSections.length, "Contact:", matchedOther.length, "Email/Phone:", hasEssentialInfo);
       return res.status(400).json({
         message: `This file was rejected because it doesn't look like a real resume. A professional resume must include clear headings (Education, Experience, Skills), contact details (Email or Phone), and substantial professional content. Please upload a valid resume.`

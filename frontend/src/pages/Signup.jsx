@@ -23,8 +23,16 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-xl shadow-indigo-100 border border-indigo-50">
+    <div className="min-h-screen relative overflow-hidden bg-indigo-50 flex items-center justify-center p-4 sm:p-6">
+      {/* Enhanced Animated Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-6000"></div>
+      </div>
+
+      <div className="max-w-md w-full bg-white/80 backdrop-blur-2xl rounded-3xl p-8 md:p-12 shadow-2xl shadow-indigo-200/50 border border-white/30 relative z-10 mx-auto">
         <div className="text-center mb-10">
           <div className="w-16 h-16 bg-[#6366F1] rounded-[1.5rem] flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-indigo-500/20 ring-8 ring-indigo-500/5 transition-transform hover:scale-105 cursor-pointer">
             <Sparkles size={32} fill="currentColor" />
@@ -55,7 +63,7 @@ const Signup = () => {
               <input 
                 type="email" required
                 className="w-full pl-14 pr-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-sm transition-all"
-                placeholder="sameer@example.com"
+                placeholder="user@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
