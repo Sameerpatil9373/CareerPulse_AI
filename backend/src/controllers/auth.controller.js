@@ -38,10 +38,18 @@ exports.register = async (req, res) => {
       message: "User registered successfully! You can now log in."
     });
 
-  } catch (error) {
-    console.error("Signup Error:", error);
-    return res.status(500).json({ message: error.message || "Internal Server Error" });
+  } } catch (error) {
+  console.error("========== GOOGLE LOGIN ERROR ==========");
+  console.error("Message:", error.message);
+  console.error("Stack:", error.stack);
+
+  if (error.errors) {
+    console.error("Errors:", error.errors);
   }
+
+  return res.status(500).json({
+    message: error.message || "Internal Server Error"
+  });
 };
 
 /**
