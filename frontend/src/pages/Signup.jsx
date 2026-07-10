@@ -6,17 +6,26 @@ import { Sparkles, User, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
     setLoading(true);
     try {
       await register(formData.name, formData.email, formData.password);
       alert("Registration successful! Please log in.");
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Signup failed");
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || "Signup failed. Please try again.";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -42,6 +51,12 @@ const Signup = () => {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-5">
+          {error && (
+            <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-xl text-xs font-bold animate-in fade-in slide-in-from-top-2">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Full Name</label>
             <div className="relative">
@@ -76,12 +91,19 @@ const Signup = () => {
               <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
               <input 
                 type="password" required
-                className="w-full pl-14 pr-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-sm transition-all"
+                className={`w-full pl-14 pr-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 outline-none font-medium text-sm transition-all ${
+                  formData.password.length > 0 && formData.password.length < 8 ? "focus:ring-rose-500" : "focus:ring-indigo-500"
+                }`}
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
               />
             </div>
+            {formData.password.length > 0 && formData.password.length < 8 && (
+              <p className="text-[10px] text-rose-500 font-bold ml-4 animate-in slide-in-from-top-1">
+                Password must be at least 8 characters.
+              </p>
+            )}
           </div>
 
           <button 

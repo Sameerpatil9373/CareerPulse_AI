@@ -9,9 +9,14 @@ const api = axios.create({
 
 // JWT token ko har request ke saath bhejne ke liye interceptor
 api.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user?.token) {
-    config.headers.Authorization = `Bearer ${user.token}`;
+  try {
+    const raw = localStorage.getItem("user");
+    const user = raw ? JSON.parse(raw) : null;
+    if (user?.token) {
+      config.headers.Authorization = `Bearer ${user.token}`;
+    }
+  } catch {
+    // ignore corrupt auth storage
   }
   return config;
 });

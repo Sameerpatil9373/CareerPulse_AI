@@ -6,6 +6,7 @@ import AIInsights from "../pages/AIInsights";
 import AptitudePrep from "../pages/Aptitude"
 import History from "../pages/History";
 import ColdEmail from "../pages/ColdEmail";
+import UploadResume from "../pages/UploadResume";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -27,6 +28,7 @@ const AppRouter = () => {
               <DashboardLayout>
                 <Routes>
                   <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="upload" element={<UploadResume />} />
                   <Route path="job-matching" element={<JobMatching />} />
                   
                   {/* Ensure the path "insights" matches your Sidebar Link */}

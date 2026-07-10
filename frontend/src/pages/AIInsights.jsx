@@ -1,256 +1,437 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "../services/api";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import ProgressCircle from "../components/ui/ProgressCircle"; // Gamified Loader Component
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Zap,
-  HelpCircle,
-  AlertCircle,
   ArrowLeft,
-  Download,
-  RefreshCcw,
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  Sparkles,
+  Target,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Briefcase,
+  Lightbulb,
   Loader2,
-  BrainCircuit
+  Download,
+  Calendar,
+  TrendingUp,
+  Rocket,
+  BrainCircuit,
+  RefreshCw
 } from "lucide-react";
+import api from "../services/api";
+
+// Reusable Accordion for Interview Questions (Updated to include AI explanation)
+const QuestionAccordion = ({ question, answer, explanation, isOpen, onClick }) => {
+  return (
+    <div className={`border rounded-xl overflow-hidden mb-3 bg-white transition-all ${isOpen ? 'border-purple-200 shadow-sm ring-1 ring-purple-100' : 'border-slate-200 hover:border-purple-200'}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full flex items-start sm:items-center justify-between p-4 text-left focus:outline-none hover:bg-slate-50 gap-4"
+      >
+        <span className="font-medium text-sm text-slate-800 leading-snug flex-1">{question}</span>
+        <ChevronDown 
+          size={18} 
+          className={`text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-purple-600" : ""}`} 
+        />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 pt-0 text-sm space-y-3">
+              <div className="flex gap-3 items-start p-4 bg-purple-50/50 rounded-xl border border-purple-100/50">
+                <Lightbulb size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                <p className="leading-relaxed text-slate-700">
+                  <span className="font-bold text-slate-900">Expected:</span> {answer}
+                </p>
+              </div>
+              {explanation && (
+                <div className="flex gap-3 items-start p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <BrainCircuit size={16} className="text-purple-500 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed text-slate-600">
+                    <span className="font-bold uppercase tracking-wider text-[10px] mr-2">Interviewer Note</span>
+                    {explanation}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const AIInsights = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [openQuestionId, setOpenQuestionId] = useState(null);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
-  const [resumeId, setResumeId] = useState(
-    location.state?.resumeId || localStorage.getItem("lastResumeId")
-  );
+  const resumeId = location.state?.resumeId || localStorage.getItem("lastResumeId");
 
-  const [activeTab, setActiveTab] = useState("analysis");
-
-  const [data, setData] = useState({
-    summary: "",
-    questions: [],
-    explanation: "",
-    loading: true,
-    isExporting: false
-  });
-
-  // Gamified Loader State
-  const [aiProgress, setAiProgress] = useState(0);
-
-  const fetchDeepAnalysis = useCallback(async (targetId, isRefresh = false) => {
-    if (!targetId || targetId === "undefined") return;
-
+  const fetchInsights = useCallback(async () => {
     try {
-      const url = `/api/resume/insights/${targetId}?refresh=${isRefresh}`;
-      const response = await api.get(url);
-
-      if (response.data?.processing) {
-        setData(prev => ({ ...prev, loading: true }));
-        return;
-      }
-
-      setData({
-        summary: response.data?.summary || "Summary unavailable.",
-        questions: response.data?.questions || [],
-        explanation: response.data?.explanation || "No suitability analysis provided.",
-        loading: false,
-        isExporting: false
-      });
-      
-      // PERSIST: Ensure Dashboard knows we are looking at this specific resume
-      localStorage.setItem("lastResumeId", targetId);
-    } catch (error) {
-      console.error("Deep Analysis Error:", error);
-      setData(prev => ({ ...prev, loading: false }));
-    }
-  }, []);
-
-  useEffect(() => {
-    const initialize = async () => {
-      let currentId = resumeId;
-      if (!currentId || currentId === "undefined") {
-        try {
-          const res = await api.get("/api/resume/all");
-          const latest = res.data.data[0];
-          if (latest?._id) {
-            currentId = latest._id;
-            setResumeId(currentId);
-            localStorage.setItem("lastResumeId", currentId);
-            // We return here because setting resumeId will trigger this effect again
-            return;
-          } else {
-            navigate("/app/dashboard");
-            return;
-          }
-        } catch {
-          navigate("/app/dashboard");
-          return;
-        }
-      }
-      
-      // ONLY fetch if we have a valid ID
-      fetchDeepAnalysis(currentId);
-    };
-    
-    initialize();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId, navigate]);
-
-  // Polling mechanism: Keep checking every 3 seconds if data is still loading
-  useEffect(() => {
-    if (!data.loading || !resumeId) return;
-
-    const interval = setInterval(() => {
-      fetchDeepAnalysis(resumeId);
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, [data.loading, resumeId]); // fetchDeepAnalysis removed from deps as it's stable
-
-  // Gamified loading progress simulator (Ticks up while waiting for Ollama)
-  useEffect(() => {
-    let interval;
-    if (data.loading) {
-      // Don't reset to 5 if it's already higher than 0 (unless it's just starting)
-      setAiProgress(prev => (prev === 0 ? 5 : prev));
-      
-      interval = setInterval(() => {
-        setAiProgress(prev => {
-          const next = prev + Math.floor(Math.random() * 8) + 2;
-          return next >= 95 ? 95 : next;
-        });
-      }, 1500);
-    } else {
-      setAiProgress(100);
-    }
-    return () => clearInterval(interval);
-  }, [data.loading]);
-
-  const handleExportPDF = async () => {
-    const reportElement = document.getElementById("ai-report-content");
-    if (!reportElement) return;
-
-    setData(prev => ({ ...prev, isExporting: true }));
-
-    try {
-      const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`AI-Report-${resumeId.slice(-6)}.pdf`);
-    } catch (error) {
-      console.error("PDF Export Error:", error);
+      setLoading(true);
+      setError(false);
+      const res = await api.get(`/api/resume/insights/${resumeId}`);
+      setData(res.data?.data || res.data || {});
+    } catch (err) {
+      setError(true);
     } finally {
-      setData(prev => ({ ...prev, isExporting: false }));
+      setLoading(false);
     }
+  }, [resumeId]);
+
+  useEffect(() => {
+    if (!resumeId) {
+      navigate("/app/upload");
+      return;
+    }
+    fetchInsights();
+  }, [resumeId, navigate, fetchInsights]);
+
+  const fadeUpProps = {
+    initial: { opacity: 0, y: 15 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3, ease: "easeOut" }
   };
 
-  // GAMIFIED LOADING SCREEN UI
-  if (data.loading)
+  // Error State Rendering
+  if (error) {
     return (
-      <div className="h-[80vh] flex flex-col items-center justify-center space-y-8 animate-in fade-in">
-        <div className="relative flex items-center justify-center">
-          <ProgressCircle percentage={aiProgress} size={160} stroke={12} />
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-black text-[#111322]">{aiProgress}%</span>
+      <div className="min-h-screen bg-[#fafbfc] pt-12 px-6 flex flex-col items-center">
+        <div className="bg-rose-50 border border-rose-100 p-8 rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4 shadow-sm max-w-lg w-full">
+          <div className="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 shadow-sm">
+            <AlertCircle size={28} />
           </div>
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="flex items-center gap-2 text-indigo-600 font-black uppercase tracking-[0.2em] text-sm">
-            <BrainCircuit size={18} className="animate-pulse" /> Synthesizing Deep Insights
-          </p>
-          <p className="text-gray-400 font-bold text-xs mt-2 italic">Ollama model is reasoning (usually takes 15-20s)...</p>
+          <div>
+            <h3 className="font-bold text-gray-900 text-lg">Analysis Failed</h3>
+            <p className="text-sm text-gray-500 mt-1 font-medium max-w-sm">
+              Our AI recruiter encountered an issue while parsing your resume data.
+            </p>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button 
+              onClick={() => navigate("/app/dashboard")}
+              className="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
+            >
+              Dashboard
+            </button>
+            <button 
+              onClick={fetchInsights}
+              className="flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-md"
+            >
+              <RefreshCw size={16} /> Retry Analysis
+            </button>
+          </div>
         </div>
       </div>
     );
+  }
+
+  // Safe destructuring with functional fallbacks adapting to the new AI output
+  const summary = data?.summary || "";
+  const skills = Array.isArray(data?.skills) ? data.skills : [];
+  const missingSkills = Array.isArray(data?.missingSkills) ? data.missingSkills : [];
+  const strengths = Array.isArray(data?.strengths) ? data.strengths : [];
+  const improvements = Array.isArray(data?.improvements) ? data.improvements : (Array.isArray(data?.weaknesses) ? data.weaknesses : []);
+  const rawQuestions = Array.isArray(data?.questions) ? data.questions : (Array.isArray(data?.interviewQuestions) ? data.interviewQuestions : []);
+  const recommendations = Array.isArray(data?.recommendations) ? data.recommendations : [];
+
+  // Helper to chunk questions into Easy, Medium, Hard functionally
+  const categorizedQuestions = {
+    Easy: rawQuestions.slice(0, Math.ceil(rawQuestions.length / 3)),
+    Medium: rawQuestions.slice(Math.ceil(rawQuestions.length / 3), Math.ceil((rawQuestions.length / 3) * 2)),
+    Hard: rawQuestions.slice(Math.ceil((rawQuestions.length / 3) * 2))
+  };
+
+  const roadmapLabels = ["This Week", "Next Month", "Long Term"];
+  const roadmapIcons = [<Calendar size={20} />, <TrendingUp size={20} />, <Rocket size={20} />];
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 pb-20 px-4 mt-6 animate-in slide-in-from-bottom-4">
-      <div className="flex justify-between items-center">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 font-bold text-sm transition-colors"
-        >
-          <ArrowLeft size={20} /> Back
-        </button>
-
-        <div className="flex gap-4">
-      
-    
-
+    <div className="min-h-screen bg-[#fafbfc] pt-8 pb-24 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-5xl mx-auto space-y-6">
+        
+        {/* Navigation & Header */}
+        <div className="mb-6">
           <button
-            onClick={() => {
-              setData(prev => ({ ...prev, loading: true }));
-              setAiProgress(0); // Reset progress on manual re-analyze
-              fetchDeepAnalysis(resumeId, true);
-            }}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg hover:bg-indigo-700 transition-all active:scale-[0.98]"
+            type="button"
+            onClick={() => navigate("/app/dashboard")}
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-purple-600 transition-colors mb-6"
           >
-            <RefreshCcw size={16} /> Re-Analyze
+            <ArrowLeft size={16} />
+            Back to Dashboard
           </button>
-        </div>
-      </div>
-
-      <div id="ai-report-content" className="space-y-8">
-        <div className="flex gap-2 bg-gray-100/50 p-1.5 rounded-[1.5rem] w-fit border border-gray-100">
-          <button
-            onClick={() => setActiveTab("analysis")}
-            className={`px-8 py-3 rounded-[1.2rem] text-[11px] font-black uppercase tracking-wider transition-all ${
-              activeTab === "analysis" ? "bg-[#111322] text-white shadow-lg" : "text-gray-400"
-            }`}
-          >
-            AI Analysis
-          </button>
-          <button
-            onClick={() => setActiveTab("interview")}
-            className={`px-8 py-3 rounded-[1.2rem] text-[11px] font-black uppercase tracking-wider transition-all ${
-              activeTab === "interview" ? "bg-[#111322] text-white shadow-lg" : "text-gray-400"
-            }`}
-          >
-            Interview Prep
-          </button>
+          
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Resume Intelligence Report</h1>
+          <p className="text-sm text-slate-500">
+            A comprehensive, AI-driven analysis of your professional profile and market readiness.
+          </p>
         </div>
 
-        {activeTab === "analysis" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 bg-white rounded-[3rem] p-12 border border-gray-100 shadow-sm">
-              <h3 className="text-xl font-black text-[#111322] mb-8 flex items-center gap-3">
-                <Zap size={24} className="text-indigo-600" /> Executive AI Summary
-              </h3>
-              <p className="text-lg leading-relaxed text-gray-600 font-medium italic border-l-4 border-indigo-100 pl-8 whitespace-pre-line">
-                {data.summary}
-              </p>
+        {/* 1. HERO: AI Executive Summary */}
+        <motion.div {...fadeUpProps} className="bg-purple-600 rounded-2xl shadow-sm border border-purple-700 p-8 relative overflow-hidden text-white">
+          <div className="absolute -top-10 -right-10 opacity-10 pointer-events-none">
+            <BrainCircuit size={200} />
+          </div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-200 uppercase tracking-widest mb-4">
+              <Sparkles size={16} /> AI EXECUTIVE SUMMARY
             </div>
-            <div className="lg:col-span-4 bg-[#111322] rounded-[3rem] p-12 text-white shadow-xl">
-              <h3 className="text-xl font-black mb-8 flex items-center gap-3">
-                <AlertCircle size={24} className="text-indigo-400" /> Market Suitability
-              </h3>
-              <p className="text-sm leading-relaxed opacity-90 italic whitespace-pre-line">
-                {data.explanation}
-              </p>
+            
+            {loading ? (
+              <div className="space-y-3 pt-2">
+                <div className="h-4 bg-purple-500/50 rounded-md animate-pulse w-full"></div>
+                <div className="h-4 bg-purple-500/50 rounded-md animate-pulse w-11/12"></div>
+                <div className="h-4 bg-purple-500/50 rounded-md animate-pulse w-4/5"></div>
+              </div>
+            ) : (
+              <div>
+                <p className={`text-lg leading-relaxed font-medium text-purple-50 max-w-3xl transition-all duration-300 ${isSummaryExpanded ? '' : 'line-clamp-3'}`}>
+                  {summary}
+                </p>
+                {summary.length > 150 && (
+                  <button 
+                    onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                    className="mt-4 flex items-center gap-1 text-xs font-bold bg-purple-700/50 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {isSummaryExpanded ? (
+                      <>Show Less <ChevronUp size={14} /></>
+                    ) : (
+                      <>Read Full Briefing <ChevronDown size={14} /></>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* 2. Strengths & Improvements */}
+        <motion.div {...fadeUpProps} transition={{ delay: 0.1 }} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            {/* Strengths */}
+            <div className="p-6 sm:p-8">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-6">
+                <CheckCircle2 size={16} className="text-emerald-500" /> KEY STRENGTHS
+              </div>
+              
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => <div key={i} className="h-4 bg-emerald-50 rounded animate-pulse w-full"></div>)}
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {strengths.length > 0 ? strengths.map((strength, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-sm text-slate-700">
+                      <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" />
+                      <span>{strength}</span>
+                    </li>
+                  )) : (
+                    <li className="text-sm text-slate-400 italic bg-slate-50 p-4 rounded-xl border border-slate-100">No core strengths detected in current formatting.</li>
+                  )}
+                </ul>
+              )}
+            </div>
+
+            {/* Improvements */}
+            <div className="p-6 sm:p-8 bg-slate-50/50">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-6">
+                <AlertTriangle size={16} className="text-amber-500" /> AREAS TO IMPROVE
+              </div>
+              
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => <div key={i} className="h-4 bg-amber-50 rounded animate-pulse w-full"></div>)}
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {improvements.length > 0 ? improvements.map((imp, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-sm text-slate-700">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+                      <span>{imp}</span>
+                    </li>
+                  )) : (
+                    <li className="text-sm text-slate-400 italic bg-white p-4 rounded-xl border border-slate-100">No critical weaknesses detected in current formatting.</li>
+                  )}
+                </ul>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="bg-white rounded-[3rem] p-12 border border-gray-100 shadow-sm">
-            <h3 className="text-xl font-black text-[#111322] mb-12 flex items-center gap-3">
-              <HelpCircle size={24} className="text-indigo-600" /> Technical Interview Preparation
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {data.questions.map((question, index) => (
-                <div key={index} className="flex gap-6 p-8 rounded-[2.5rem] bg-gray-50 border hover:border-indigo-100 hover:bg-white transition-all">
-                  <span className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">
-                    {index + 1}
-                  </span>
-                  <p className="text-[15px] font-bold text-gray-700 leading-snug">
-                    {question}
-                  </p>
+        </motion.div>
+
+        {/* 3. Detected Skills */}
+        {skills.length > 0 && !loading && (
+          <motion.div {...fadeUpProps} transition={{ delay: 0.15 }} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-wider mb-6">
+              <Zap size={16} /> DETECTED SKILLS
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {skills.map((skill, idx) => (
+                <span key={idx} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-purple-50 text-purple-700 border border-purple-100 transition-colors hover:bg-purple-100">
+                  {typeof skill === 'object' ? skill.name : skill}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 4. Missing Skills */}
+        {missingSkills.length > 0 && !loading && (
+          <motion.div {...fadeUpProps} transition={{ delay: 0.2 }} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-600 uppercase tracking-wider mb-6">
+              <Target size={16} /> MISSING HIGH-DEMAND SKILLS
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {missingSkills.map((skill, idx) => (
+                <span key={idx} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span>
+                  {typeof skill === 'object' ? skill.name : skill}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 5. Interview Questions (Accordion Grouped) */}
+        <motion.div {...fadeUpProps} transition={{ delay: 0.25 }} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-wider">
+              <Briefcase size={16} /> AI-GENERATED INTERVIEW SCENARIOS
+            </div>
+          </div>
+          
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-3">
+                  <div className="h-5 bg-slate-100 rounded animate-pulse w-3/4"></div>
                 </div>
               ))}
             </div>
-          </div>
+          ) : rawQuestions.length > 0 ? (
+            <div className="space-y-8">
+              {/* Easy Tier */}
+              {categorizedQuestions.Easy.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-3 px-1">Foundational</h4>
+                  <div className="space-y-2">
+                    {categorizedQuestions.Easy.map((qa, idx) => {
+                      const id = `easy-${idx}`;
+                      return (
+                        <QuestionAccordion 
+                          key={id}
+                          question={qa.question || qa} 
+                          answer={qa.answer || qa.hint || "Use the STAR method to structure your response."}
+                          explanation={qa.explanation}
+                          isOpen={openQuestionId === id}
+                          onClick={() => setOpenQuestionId(openQuestionId === id ? null : id)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Medium Tier */}
+              {categorizedQuestions.Medium.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-3 px-1">Technical</h4>
+                  <div className="space-y-2">
+                    {categorizedQuestions.Medium.map((qa, idx) => {
+                      const id = `med-${idx}`;
+                      return (
+                        <QuestionAccordion 
+                          key={id}
+                          question={qa.question || qa} 
+                          answer={qa.answer || qa.hint || "Use the STAR method to structure your response."}
+                          explanation={qa.explanation}
+                          isOpen={openQuestionId === id}
+                          onClick={() => setOpenQuestionId(openQuestionId === id ? null : id)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Hard Tier */}
+              {categorizedQuestions.Hard.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-3 px-1">System Design & Advanced</h4>
+                  <div className="space-y-2">
+                    {categorizedQuestions.Hard.map((qa, idx) => {
+                      const id = `hard-${idx}`;
+                      return (
+                        <QuestionAccordion 
+                          key={id}
+                          question={qa.question || qa} 
+                          answer={qa.answer || qa.hint || "Use the STAR method to structure your response."}
+                          explanation={qa.explanation}
+                          isOpen={openQuestionId === id}
+                          onClick={() => setOpenQuestionId(openQuestionId === id ? null : id)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-slate-50 rounded-xl border border-slate-100">
+              <p className="text-sm font-medium text-slate-600">No interview scenarios generated.</p>
+            </div>
+          )}
+        </motion.div>
+
+        {/* 6. Career Roadmap */}
+        {recommendations.length > 0 && !loading && (
+          <motion.div {...fadeUpProps} transition={{ delay: 0.3 }} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-wider mb-6">
+              <Rocket size={16} /> CAREER ROADMAP
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {recommendations.slice(0, 3).map((rec, idx) => (
+                <div key={idx} className="border border-slate-100 rounded-xl p-5 flex flex-col items-start gap-4 hover:border-purple-200 hover:shadow-sm transition-all bg-slate-50/50">
+                  <div className={`p-2.5 rounded-xl shrink-0 ${idx === 0 ? 'bg-purple-100 text-purple-700' : idx === 1 ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    {roadmapIcons[idx] || <Rocket size={20} />}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-2">{roadmapLabels[idx] || `Step ${idx + 1}`}</h4>
+                    <p className="text-sm text-slate-600 leading-relaxed">{rec}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         )}
+
+        {/* 7. Action Buttons */}
+        {!loading && (
+          <motion.div {...fadeUpProps} transition={{ delay: 0.35 }} className="flex flex-col sm:flex-row justify-center gap-4 pt-4 pb-8">
+            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-sm font-bold rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
+              <Download size={16} /> Export Report
+            </button>
+            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2">
+              <Briefcase size={16} /> Match Jobs
+            </button>
+          </motion.div>
+        )}
+
       </div>
     </div>
   );

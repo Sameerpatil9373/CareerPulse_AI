@@ -2,7 +2,7 @@ const path = require("path");
 const Resume = require("../models/resume.model");
 
 const parseResume = require("../services/resumeParser.service");
-const { generateFullAnalysis, getFallbackAnalysis } = require("../services/ai.service");
+const { generateFullAnalysis, getFallbackAnalysis } = require("../services/aiService");
 
 const {
   analyzeSkillsAI,
@@ -57,33 +57,30 @@ exports.uploadResume = async (req, res) => {
     const hasEmail = emailPattern.test(extractedText);
     const hasPhone = phonePattern.test(extractedText);
 
-    /**
-     * ULTRA STRICT REJECTION LOGIC: 
-     * - MUST have at least 2 out of 4 major sections (Education, Experience, Projects, Skills)
-     * - MUST have at least 2 contact/other keywords
-     * - MUST have either a valid email or a valid phone number pattern
-     * - Minimum length 400 characters
-     */
     const hasEnoughSections = foundSections.length >= 2;
-    const hasEnoughContact = matchedOther.length >= 2;
     const hasEssentialInfo = hasEmail || hasPhone;
+    const hasEnoughContent = extractedText.trim().length >= 300;
 
-    if (!hasEnoughSections || !hasEnoughContact || !hasEssentialInfo || extractedText.trim().length < 400) {
-      console.log("❌ Rejected File: Sections:", foundSections.length, "Contact:", matchedOther.length, "Email/Phone:", hasEssentialInfo);
+    if (!hasEnoughSections || !hasEssentialInfo || !hasEnoughContent) {
+      console.log(
+        "❌ Rejected File: Sections:",
+        foundSections.length,
+        "Keywords:",
+        matchedOther.length,
+        "Email/Phone:",
+        hasEssentialInfo,
+        "Length:",
+        extractedText.trim().length
+      );
       return res.status(400).json({
-        message: `This file was rejected because it doesn't look like a real resume. A professional resume must include clear headings (Education, Experience, Skills), contact details (Email or Phone), and substantial professional content. Please upload a valid resume.`
+        message:
+          "This file doesn't look like a valid resume. Include sections such as Education, Experience, or Skills, add your email or phone number, and use a text-based PDF/DOCX (not a scanned image).",
       });
     }
 
-    /**
-     * AI Skill Detection
-     */
     const detectedSkills = await analyzeSkillsAI(extractedText);
     console.log("🧠 Detected Skills:", detectedSkills);
 
-    /**
-     * Save Resume
-     */
     const savedResume = await Resume.create({
       userId,
       fileName: req.file.originalname,
@@ -94,17 +91,13 @@ exports.uploadResume = async (req, res) => {
       aiInsights: null
     });
 
-    /**
-     * Send response immediately (fast UX)
-     */
+
     res.status(201).json({
       data: savedResume,
       message: "Resume uploaded. AI analysis running..."
     });
 
-    /**
-     * Background AI Analysis
-     */
+    
     setTimeout(async () => {
       try {
         console.log("🚀 Starting background AI analysis...");
@@ -126,16 +119,13 @@ exports.uploadResume = async (req, res) => {
 
   } catch (error) {
     console.log("❌ Resume upload error:", error.message);
-    res.status(500).json({
-      message: "Resume upload failed",
-      error: error.message
+    return res.status(500).json({
+      message: error.message || "Failed to process resume. Please try another PDF or DOCX file.",
     });
   }
 };
 
-/**
- * Get Single Resume by ID
- */
+
 exports.getResumeById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -147,20 +137,17 @@ exports.getResumeById = async (req, res) => {
 
     res.status(200).json({ data: resume });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw error;
   }
 };
 
-/**
- * Get All Resumes
- */
 exports.getAllResumes = async (req, res) => {
   try {
     const userId = getUserId(req);
     const resumes = await Resume.find({ userId }).sort({ createdAt: -1 });
     res.status(200).json({ data: resumes });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw error;
   }
 };
 
@@ -180,13 +167,10 @@ exports.deleteResume = async (req, res) => {
 
     res.status(200).json({ message: "Resume deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw error;
   }
 };
 
-/**
- * AI Insights
- */
 exports.getResumeInsights = async (req, res) => {
   try {
     const { id } = req.params;
@@ -204,30 +188,23 @@ exports.getResumeInsights = async (req, res) => {
     // FIX: Much stronger check! Ensure summary actually has text inside it, not just an empty object from Mongoose.
     const hasInsights = resume.aiInsights && resume.aiInsights.summary && resume.aiInsights.summary.trim().length > 0;
 
-    /**
-     * If AI still running (No summary text found)
-     */
+  
     if (!hasInsights && !refresh) {
       console.log("⏳ AI is still processing, telling frontend to wait...");
       return res.status(200).json({
         summary: "",
         questions: [],
         explanation: "",
-        processing: true // This keeps the loading circle ticking!
+        processing: true 
       });
     }
 
-    /**
-     * Return cached insights if they are completely ready
-     */
     if (hasInsights && !refresh) {
       console.log("⚡ Returning cached AI insights");
       return res.status(200).json(resume.aiInsights);
     }
 
-    /**
-     * Force refresh or generate if missing
-     */
+    
     console.log("🚀 Generating AI insights");
     const insights = await generateFullAnalysis(
       resume.extractedText,
@@ -241,10 +218,7 @@ exports.getResumeInsights = async (req, res) => {
 
   } catch (error) {
     console.log("❌ AI Insights Error:", error.message);
-    res.status(500).json({
-      message: "AI analysis failed",
-      error: error.message
-    });
+    throw error;
   }
 };
 
@@ -276,6 +250,6 @@ exports.matchResume = async (req, res) => {
 
   } catch (error) {
     console.log("❌ Job Matching Error:", error.message);
-    res.status(500).json({ error: error.message });
+    throw error;
   }
 };

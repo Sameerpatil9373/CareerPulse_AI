@@ -3,7 +3,7 @@ const cors = require("cors");
 
 const resumeRoutes = require("./routes/resume.routes");
 const authRoutes = require("./routes/auth.routes");
-
+const practiceRoutes = require('./routes/practiceRoutes');
 const app = express();
 
 app.use(cors());
@@ -21,10 +21,13 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/resume", resumeRoutes);
-
+app.use('/api/practice', practiceRoutes);
 app.use((err, req, res, next) => {
   console.error("🔥 FULL ERROR:", err);
-  res.status(500).json({ error: err.message });
+  res.status(500).json({
+    message: err.message || "Internal server error",
+    error: err.message,
+  });
 });
 
 module.exports = app;

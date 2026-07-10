@@ -14,10 +14,10 @@ const DashboardLayout = ({ children }) => {
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-gray-50 overflow-y-auto relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8F9FC] overflow-y-auto relative">
         <Topbar onToggleSidebar={toggleSidebar} />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

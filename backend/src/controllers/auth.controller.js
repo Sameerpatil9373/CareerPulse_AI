@@ -5,11 +5,11 @@ const { OAuth2Client } = require("google-auth-library");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-
-// Register a new user
+/**
+ * Register a new user
+ */
 exports.register = async (req, res) => {
   try {
-
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -27,28 +27,35 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Create user - This triggers the pre('save') hook in user.model.js
     const user = await User.create({
       name,
       email: normalizedEmail,
       password
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "User registered successfully! You can now log in."
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Signup Error:", error);
+    return res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
 
-
-// Login existing user
+/**
+ * Login existing user
+ */
 exports.login = async (req, res) => {
-
   try {
-
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required"
+      });
+    }
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -77,7 +84,7 @@ exports.login = async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    res.json({
+    return res.json({
       token,
       user: {
         id: user._id,
@@ -87,17 +94,16 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Login Error:", error);
+    return res.status(500).json({ message: error.message || "Internal Server Error" });
   }
-
 };
 
-
-// Google Login
+/**
+ * Google Login
+ */
 exports.googleLogin = async (req, res) => {
-
   try {
-
     const { token } = req.body;
 
     const ticket = await client.verifyIdToken({
@@ -106,7 +112,6 @@ exports.googleLogin = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-
     const email = payload.email.toLowerCase().trim();
     const name = payload.name;
     const googleId = payload.sub;
@@ -115,13 +120,11 @@ exports.googleLogin = async (req, res) => {
 
     // Create user if not exists
     if (!user) {
-
       user = await User.create({
         name,
         email,
         googleId
       });
-
     }
 
     const jwtToken = jwt.sign(
@@ -130,7 +133,7 @@ exports.googleLogin = async (req, res) => {
       { expiresIn: "24h" }
     );
 
-    res.json({
+    return res.json({
       token: jwtToken,
       user: {
         id: user._id,
@@ -140,13 +143,7 @@ exports.googleLogin = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.error(error);
-
-    res.status(500).json({
-      message: "Google login failed"
-    });
-
+    console.error("Google Login Error:", error);
+    return res.status(500).json({ message: error.message || "Internal Server Error" });
   }
-
 };
