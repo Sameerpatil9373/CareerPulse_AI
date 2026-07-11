@@ -82,18 +82,28 @@ const AIInsights = () => {
 
   const resumeId = location.state?.resumeId || localStorage.getItem("lastResumeId");
 
-  const fetchInsights = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(false);
-      const res = await api.get(`/api/resume/insights/${resumeId}`);
-      setData(res.data?.data || res.data || {});
-    } catch (err) {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [resumeId]);
+ const fetchInsights = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError(false);
+
+    console.log("================================");
+    console.log("Resume ID:", resumeId);
+
+    const res = await api.get(`/api/resume/insights/${resumeId}`);
+
+    console.log("AI Response:", res.data);
+    console.log("================================");
+
+    setData(res.data?.data || res.data || {});
+  } catch (err) {
+    console.error("AI Error:", err);
+    setError(true);
+  } finally {
+    setLoading(false);
+  }
+}, [resumeId]);
+  
 
   useEffect(() => {
     if (!resumeId) {

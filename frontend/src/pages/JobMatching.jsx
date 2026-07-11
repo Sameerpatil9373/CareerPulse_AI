@@ -20,19 +20,30 @@ import {
 import api from "../services/api";
 
 // --- Functional Apply Dropdown Component ---
+// --- Functional Apply Dropdown Component ---
 const ApplyDropdown = ({ jobTitle, isOpen, toggleDropdown, closeDropdown }) => {
   const dropdownRef = useRef(null);
 
   // Handle outside click
   useEffect(() => {
+    // FIX 1: Only attach the event listener if THIS specific dropdown is open.
+    if (!isOpen) return;
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         closeDropdown();
       }
     };
+    
+    // FIX 2: Use mousedown/touchstart instead of click to prevent race conditions
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [closeDropdown]);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isOpen, closeDropdown]); // FIX 3: Added isOpen to the dependency array
 
   const query = encodeURIComponent(jobTitle);
   const platforms = [
@@ -59,7 +70,7 @@ const ApplyDropdown = ({ jobTitle, isOpen, toggleDropdown, closeDropdown }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-gray-200 shadow-xl rounded-2xl overflow-hidden z-50"
+            className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-2xl overflow-hidden z-[9999]"
           >
             <div className="py-2">
               <p className="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Apply via</p>
@@ -309,7 +320,7 @@ const JobMatching = () => {
                 {/* 3. Left Column: Job Feed */}
                 <div className="lg:col-span-8 space-y-6">
                   {jobs.map((job) => (
-                    <motion.div variants={itemVariants} key={job.id} className="bg-white rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+                    <motion.div variants={itemVariants} key={job.id} className="bg-white rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 group">
                       <div className="p-6 md:p-8">
                         
                         {/* Job Card Header */}

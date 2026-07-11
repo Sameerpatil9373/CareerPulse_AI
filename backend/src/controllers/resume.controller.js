@@ -112,9 +112,17 @@ exports.uploadResume = async (req, res) => {
           { aiInsights: insights }
         );
         console.log("✅ Background AI insights saved");
-      } catch (error) {
-        console.log("❌ Background AI generation failed:", error.message);
-      }
+      } 
+       catch (error) {
+    console.log("========== AI BACKGROUND ERROR ==========");
+    console.error(error);
+    console.error(error.message);
+    console.error(error.stack);
+
+    if (error.response) {
+        console.error(error.response.data);
+    }
+}
     }, 2000);
 
   } catch (error) {
