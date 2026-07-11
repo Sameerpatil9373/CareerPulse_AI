@@ -13,43 +13,37 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        message: "All fields are required",
+      });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user exists
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(400).json({
-        message: "User already exists with this email"
+        message: "User already exists with this email",
       });
     }
 
-    // Create user - This triggers the pre('save') hook in user.model.js
-    const user = await User.create({
+    await User.create({
       name,
       email: normalizedEmail,
-      password
+      password,
     });
 
     return res.status(201).json({
-      message: "User registered successfully! You can now log in."
+      message: "User registered successfully! You can now log in.",
     });
+  } catch (error) {
+    console.error("Signup Error:", error);
 
-  } } catch (error) {
-  console.error("========== GOOGLE LOGIN ERROR ==========");
-  console.error("Message:", error.message);
-  console.error("Stack:", error.stack);
-
-  if (error.errors) {
-    console.error("Errors:", error.errors);
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
-
-  return res.status(500).json({
-    message: error.message || "Internal Server Error"
-  });
 };
 
 /**
@@ -61,31 +55,28 @@ exports.login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        message: "Email and password are required"
+        message: "Email and password are required",
       });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find user
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return res.status(401).json({
-        message: "Invalid email or password"
+        message: "Invalid email or password",
       });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password || "");
 
     if (!isMatch) {
       return res.status(401).json({
-        message: "Invalid email or password"
+        message: "Invalid email or password",
       });
     }
 
-    // Generate token
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
@@ -97,13 +88,15 @@ exports.login = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
-
   } catch (error) {
     console.error("Login Error:", error);
-    return res.status(500).json({ message: error.message || "Internal Server Error" });
+
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -114,31 +107,39 @@ exports.googleLogin = async (req, res) => {
   try {
     const { token } = req.body;
 
+    if (!token) {
+      return res.status(400).json({
+        message: "Google token is required",
+      });
+    }
+
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
+
     const email = payload.email.toLowerCase().trim();
     const name = payload.name;
     const googleId = payload.sub;
 
     let user = await User.findOne({ email });
 
-    // Create user if not exists
     if (!user) {
       user = await User.create({
         name,
         email,
-        googleId
+        googleId,
       });
     }
 
     const jwtToken = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      {
+        expiresIn: "24h",
+      }
     );
 
     return res.json({
@@ -146,12 +147,20 @@ exports.googleLogin = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
-
   } catch (error) {
-    console.error("Google Login Error:", error);
-    return res.status(500).json({ message: error.message || "Internal Server Error" });
+    console.error("========== GOOGLE LOGIN ERROR ==========");
+    console.error("Message:", error.message);
+    console.error("Stack:", error.stack);
+
+    if (error.errors) {
+      console.error("Errors:", error.errors);
+    }
+
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
 };
