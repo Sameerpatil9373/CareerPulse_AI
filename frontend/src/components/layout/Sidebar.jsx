@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { getCurrentUser, logout } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 
 const NavItem = ({ to, icon: Icon, label, onClick, isActive }) => {
   return (
@@ -57,6 +58,8 @@ const NavItem = ({ to, icon: Icon, label, onClick, isActive }) => {
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showLoginModal } = useAuth();
+  const isAuthenticated = !!localStorage.getItem("user");
   const user = getCurrentUser(); 
   
   const userName = user?.user?.name || "Guest User";
@@ -71,6 +74,14 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (window.innerWidth < 1024) onClose();
   };
 
+  const handleNavClick = (e, to) => {
+    isMobileClose();
+    if (!isAuthenticated) {
+      e.preventDefault();
+      showLoginModal(to);
+    }
+  };
+
   return (
     <div
       className={`
@@ -81,11 +92,11 @@ const Sidebar = ({ isOpen, onClose }) => {
     >
       {/* Brand Header */}
       <div className="flex items-center justify-between px-6 pt-8 pb-6">
-        <div className="flex items-center gap-3.5 group cursor-pointer">
+        <div className="flex items-center gap-3.5 group cursor-pointer" onClick={() => navigate("/")}>
           <div className="relative">
             {/* Subtle Ambient Glow */}
             <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full" />
-            <div className="relative w-10 h-10 bg-gradient-to-b from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-900/20 border border-white/10 group-hover:scale-105 transition-transform duration-300">
+            <div className="relative w-10 h-10 bg-gradient-to-b from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-900/20 border border-white/10 group-hover:scale-105 transition-transform duration-30">
               <Sparkles size={18} className="text-white fill-white/20" />
             </div>
           </div>
@@ -116,11 +127,11 @@ const Sidebar = ({ isOpen, onClose }) => {
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3 px-3">
             Main Menu
           </p>
-          <NavItem to="/app/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={isMobileClose} isActive={location.pathname === "/app/dashboard"} />
-          <NavItem to="/app/upload" icon={Upload} label="Upload Resume" onClick={isMobileClose} isActive={location.pathname === "/app/upload"} />
-          <NavItem to="/app/job-matching" icon={Briefcase} label="Job Matching" onClick={isMobileClose} isActive={location.pathname === "/app/job-matching"} />
-          <NavItem to="/app/insights" icon={Sparkles} label="AI Insights" onClick={isMobileClose} isActive={location.pathname === "/app/insights"} />
-          <NavItem to="/app/aptitude" icon={BookOpen} label="Aptitude Prep" onClick={isMobileClose} isActive={location.pathname === "/app/aptitude"} />
+          <NavItem to="/app/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={(e) => handleNavClick(e, "/app/dashboard")} isActive={location.pathname === "/app/dashboard"} />
+          <NavItem to="/app/upload" icon={Upload} label="Upload Resume" onClick={(e) => handleNavClick(e, "/app/upload")} isActive={location.pathname === "/app/upload"} />
+          <NavItem to="/app/job-matching" icon={Briefcase} label="Job Matching" onClick={(e) => handleNavClick(e, "/app/job-matching")} isActive={location.pathname === "/app/job-matching"} />
+          <NavItem to="/app/insights" icon={Sparkles} label="AI Insights" onClick={(e) => handleNavClick(e, "/app/insights")} isActive={location.pathname === "/app/insights"} />
+          <NavItem to="/app/aptitude" icon={BookOpen} label="Aptitude Prep" onClick={(e) => handleNavClick(e, "/app/aptitude")} isActive={location.pathname === "/app/aptitude"} />
         </div>
 
         {/* Activity */}
@@ -128,8 +139,8 @@ const Sidebar = ({ isOpen, onClose }) => {
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3 px-3">
             Activity
           </p>
-          <NavItem to="/app/history" icon={History} label="History" onClick={isMobileClose} isActive={location.pathname === "/app/history"} />
-          <NavItem to="/app/cold-email" icon={Send} label="Networking" onClick={isMobileClose} isActive={location.pathname === "/app/cold-email"} />
+          <NavItem to="/app/history" icon={History} label="History" onClick={(e) => handleNavClick(e, "/app/history")} isActive={location.pathname === "/app/history"} />
+          <NavItem to="/app/cold-email" icon={Send} label="Networking" onClick={(e) => handleNavClick(e, "/app/cold-email")} isActive={location.pathname === "/app/cold-email"} />
         </div>
       </div>
 
@@ -187,15 +198,17 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Logout Button */}
-        <motion.button 
-          whileHover={{ scale: 0.98 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/5 text-zinc-400 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-400 transition-all duration-300 font-semibold text-xs tracking-wide group outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-        >
-          <LogOut size={14} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
-          <span>Sign Out</span>
-        </motion.button>
+        {isAuthenticated && (
+          <motion.button 
+            whileHover={{ scale: 0.98 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/5 text-zinc-400 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-400 transition-all duration-300 font-semibold text-xs tracking-wide group outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          >
+            <LogOut size={14} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
+            <span>Sign Out</span>
+          </motion.button>
+        )}
       </div>
 
       {/* Global styles for hidden scrollbar */}

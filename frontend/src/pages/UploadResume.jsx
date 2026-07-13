@@ -12,21 +12,36 @@ import {
   Target
 } from "lucide-react";
 import api from "../services/api";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
 
 const UploadResume = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const isAuthenticated = !!localStorage.getItem("user");
 
   const [isUploading, setIsUploading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [error, setError] = useState("");
   const [uploadedResume, setUploadedResume] = useState(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   
   // Drag & drop state
   const [isDragging, setIsDragging] = useState(false);
 
+  // Handle all upload attempts for guests
+  const handleGuestAttempt = () => {
+    setIsLoginModalOpen(true);
+  };
+
   // DO NOT MODIFY: Existing Business Logic
   const handleFileUpload = async (event) => {
+    if (!isAuthenticated) {
+      event.preventDefault();
+      handleGuestAttempt();
+      return;
+    }
+
     const file = event.target.files[0];
     if (!file) return;
 
@@ -64,9 +79,7 @@ const UploadResume = () => {
       const serverMessage =
         data?.message || data?.error || data?.msg;
 
-      if (err.response?.status === 401) {
-        setError("Session expired. Please log in again and retry.");
-      } else if (!err.response) {
+      if (!err.response) {
         setError(
           "Cannot reach the server. Make sure the backend is running on port 5000."
         );
@@ -96,9 +109,22 @@ const UploadResume = () => {
     setIsDragging(false);
     if (isUploading || aiProcessing) return;
     
+    if (!isAuthenticated) {
+      handleGuestAttempt();
+      return;
+    }
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileUpload({ target: { files: e.dataTransfer.files } });
     }
+  };
+
+  const handleUploadAreaClick = () => {
+    if (!isAuthenticated) {
+      handleGuestAttempt();
+      return;
+    }
+    fileInputRef.current?.click();
   };
 
   return (
@@ -167,7 +193,7 @@ const UploadResume = () => {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={handleUploadAreaClick}
                   className={`
                     relative w-full rounded-xl p-6 text-center transition-all duration-200 cursor-pointer
                     border-2 border-dashed flex flex-col items-center justify-center min-h-[160px]
@@ -179,7 +205,7 @@ const UploadResume = () => {
                   `}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUploadAreaClick()}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors duration-200 shadow-sm ${isDragging ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-600'}`}>
                     <UploadCloud size={24} strokeWidth={2} />
@@ -322,6 +348,50 @@ const UploadResume = () => {
 
         </AnimatePresence>
       </div>
+
+      {/* Login Required Modal */}
+      <Modal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        title="🔒 Login Required"
+        footer={
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setIsLoginModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setIsLoginModalOpen(false);
+                navigate("/login");
+              }}
+            >
+              Continue to Login
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-slate-600 mb-4">
+          Please sign in to upload your resume and unlock personalized AI features.
+        </p>
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-purple-600" />
+            <span className="text-sm text-slate-700">ATS Score Analysis</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-purple-600" />
+            <span className="text-sm text-slate-700">AI Resume Insights</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-purple-600" />
+            <span className="text-sm text-slate-700">Job Matching</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-purple-600" />
+            <span className="text-sm text-slate-700">Interview Questions</span>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

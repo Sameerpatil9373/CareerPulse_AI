@@ -28,7 +28,13 @@ const Modal = ({ isOpen, onClose, title, children, footer }) => {
       <div className="relative w-full max-w-lg bg-card border border-border rounded-xl shadow-lg animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-lg font-semibold leading-none tracking-tight">{title}</h3>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClose} 
+            className="h-8 w-8 p-0"
+            aria-label="Close"
+          >
             <X size={16} />
           </Button>
         </div>

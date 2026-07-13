@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { login } from "../services/authService";
 import { Sparkles, Mail, Lock, Loader2 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
@@ -11,6 +11,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine where to redirect after a successful login.
+  // It checks if the user was redirected here from a protected action (via state.from).
+  // If not, it defaults to the main dashboard.
+  const from = location.state?.from || "/app/dashboard";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,7 +24,8 @@ const Login = () => {
 
     try {
       await login(email, password);
-      navigate("/app/dashboard");
+      // Navigate to the intended route and replace the login page in the history stack
+      navigate(from, { replace: true });
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     } finally {
@@ -28,13 +35,13 @@ const Login = () => {
 
   const handleGoogleLogin = async (credentialResponse) => {
     try {
-  const res = await api.post("/api/auth/google", {
-  token: credentialResponse.credential,
-});
+      const res = await api.post("/api/auth/google", {
+        token: credentialResponse.credential,
+      });
 
       localStorage.setItem("user", JSON.stringify(res.data));
-      navigate("/app/dashboard");
-
+      // Navigate to the intended route and replace the login page in the history stack
+      navigate(from, { replace: true });
     } catch (err) {
       alert("Google login failed");
     }
