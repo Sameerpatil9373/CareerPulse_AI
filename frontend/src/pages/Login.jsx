@@ -40,7 +40,7 @@ const Login = () => {
       });
 
       localStorage.setItem("user", JSON.stringify(res.data));
-      // Navigate to the intended route and replace the login page in the history stack
+      // Navigate to the intended route and replace the login page in the history 
       navigate(from, { replace: true });
     } catch (err) {
       alert("Google login failed");
