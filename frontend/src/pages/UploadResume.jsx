@@ -298,7 +298,7 @@ const UploadResume = () => {
                 </div>
               </div>
 
-              {/* Metrics Grid (Styled exactly like the Dashboard cards) */}
+              {/* Metrics Grid (Styled exactly like the Dashboard card) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* ATS Score Card */}
